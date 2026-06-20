@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import {
   Award,
   Calendar,
@@ -63,7 +64,7 @@ export type NavHref =
 export interface NavItem {
   href: NavHref;
   key: NavKey;
-  Icon: React.ComponentType<{ className?: string }>;
+  Icon: ComponentType<{ className?: string }>;
 }
 
 export const PRIMARY_NAV: NavItem[] = [

@@ -7,7 +7,7 @@ import { Link, usePathname } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import FontSizeToggleButton from './font-size-toggle-button';
 import { FINANCE_NAV, PRIMARY_NAV, isActive, type NavItem } from './nav-items';
-import SignOutButton from './sign-out-button';
+import { SignOutButton } from './sign-out-button';
 import { SlidingOverflowText } from './sliding-overflow-text';
 import ThemeToggleButton from './theme-toggle-button';
 
@@ -23,7 +23,7 @@ const INACTIVE_RAIL_CLASS = 'nav-rail-inactive';
 const SIDEBAR_COLLAPSED_KEY = 'sensei.sidebarCollapsed';
 
 function financeIsActive(pathname: string) {
-  return FINANCE_NAV.some(({ href }) => isActive(pathname, href));
+  return FINANCE_NAV.some((item: NavItem) => isActive(pathname, item.href));
 }
 
 function userInitials(name?: string | null) {
@@ -240,7 +240,7 @@ function FinanceTextSection({
       <button
         type="button"
         aria-expanded={open}
-        onClick={() => setExpanded((value) => !value)}
+        onClick={() => setExpanded((value: boolean) => !value)}
         className={cn(buttonBase, active ? ACTIVE_LINK_CLASS : INACTIVE_LINK_CLASS)}
       >
         <Receipt
@@ -262,7 +262,7 @@ function FinanceTextSection({
       </button>
       {open && (
         <ul className={cn('mt-1 flex flex-col gap-0.5', variant === 'desktop' ? 'pl-7' : 'pl-8')}>
-          {FINANCE_NAV.map((item) => (
+          {FINANCE_NAV.map((item: NavItem) => (
             <li key={item.key}>
               <TextNavLink
                 item={item}
@@ -325,7 +325,7 @@ function FinanceRailSection() {
         title={t('finances')}
         aria-label={t('finances')}
         aria-expanded={open}
-        onClick={() => setExpanded((value) => !value)}
+        onClick={() => setExpanded((value: boolean) => !value)}
         className={cn(
           'flex h-12 w-full items-center justify-center rounded-md transition-colors duration-fast ease-standard',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -336,13 +336,13 @@ function FinanceRailSection() {
       </button>
       {open && (
         <ul className="flex flex-col gap-1">
-          {FINANCE_NAV.map(({ href, key, Icon }) => {
-            const itemActive = isActive(pathname, href);
-            const label = t(key);
+          {FINANCE_NAV.map((item: NavItem) => {
+            const itemActive = isActive(pathname, item.href);
+            const label = t(item.key);
             return (
-              <li key={key}>
+              <li key={item.key}>
                 <Link
-                  href={href}
+                  href={item.href}
                   title={label}
                   aria-label={label}
                   aria-current={itemActive ? 'page' : undefined}
@@ -352,7 +352,7 @@ function FinanceRailSection() {
                     itemActive ? ACTIVE_RAIL_CLASS : INACTIVE_RAIL_CLASS,
                   )}
                 >
-                  <Icon className={cn('h-4 w-4', itemActive && 'text-primary')} aria-hidden />
+                  <item.Icon className={cn('h-4 w-4', itemActive && 'text-primary')} aria-hidden />
                 </Link>
               </li>
             );

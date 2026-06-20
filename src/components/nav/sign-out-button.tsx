@@ -5,17 +5,19 @@ import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { SlidingOverflowText } from './sliding-overflow-text';
 
-export default function SignOutButton({
-  label,
-  showLabel = true,
-  className,
-  labelClassName,
-}: {
+export type SignOutButtonProps = {
   label: string;
   showLabel?: boolean;
   className?: string;
   labelClassName?: string;
-}) {
+};
+
+export function SignOutButton({
+  label,
+  showLabel = true,
+  className,
+  labelClassName,
+}: SignOutButtonProps) {
   return (
     <button
       type="button"
