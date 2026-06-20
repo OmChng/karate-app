@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781721947927,
+      "tag": "0000_large_spiral",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781804700000,
+      "tag": "0001_member_status_expansion",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781804701000,
+      "tag": "0002_member_class_assignment",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781807200000,
+      "tag": "0003_gojukan_rank_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781810800000,
+      "tag": "0004_member_detail_classes_black_belt",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781884579374,
+      "tag": "0005_member_katakana",
+      "breakpoints": true
+    }
+  ]
+}

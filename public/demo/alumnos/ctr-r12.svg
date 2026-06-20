@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Alumno demo CTR-R12">
+  <rect width="160" height="160" rx="80" fill="#fefce8"/>
+  <circle cx="80" cy="62" r="30" fill="#c58a66"/>
+  <path d="M32 144c5-31 24-48 48-48s43 17 48 48" fill="#ca8a04"/>
+  <path d="M49 57c13-24 50-25 63 0-19-7-42-7-63 0z" fill="#111827"/>
+  <text x="80" y="134" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#fff">EQ</text>
+</svg>

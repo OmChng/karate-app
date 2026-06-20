@@ -1,0 +1,362 @@
+{
+  "app": {
+    "name": "GOJU-KAN / Sensei",
+    "tagline": "Administrative platform for karate organizations"
+  },
+  "nav": {
+    "dashboard": "Home",
+    "finances": "Finance",
+    "staff": "Staff",
+    "members": "Members",
+    "clients": "Clients",
+    "rooms": "Rooms",
+    "classes": "Classes",
+    "samples": "Tests",
+    "exams": "Exams",
+    "blackBelts": "Black Belt League",
+    "plans": "Plans",
+    "cashRegister": "Cash registers",
+    "cutoff": "Cutoff",
+    "expenses": "Expenses",
+    "inventory": "Inventory",
+    "attendance": "Attendance",
+    "ranks": "Ranks",
+    "dojos": "Dojos",
+    "instructors": "Instructors",
+    "payments": "Payments",
+    "events": "Events",
+    "announcements": "Announcements",
+    "reports": "Report",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode",
+    "enableLargeText": "Enable large text",
+    "disableLargeText": "Disable large text",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "collapseMenu": "Collapse menu",
+    "expandMenu": "Expand menu",
+    "currentUser": "Current user: {name}",
+    "unknownUser": "User",
+    "activeSession": "Active session",
+    "language": "Language",
+    "primary": "Primary navigation"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "identifierLabel": "Email or phone",
+    "identifierPlaceholder": "you@example.com or 5512345678",
+    "passwordLabel": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "forgotPassword": "Forgot your password?",
+    "invalidCredentials": "Invalid credentials",
+    "signedInAs": "Signed in as {name}"
+  },
+  "dashboard": {
+    "title": "Home",
+    "welcome": "Welcome, {name}",
+    "kpis": {
+      "members": "Active members",
+      "classesToday": "Classes today",
+      "attendanceWeek": "Attendance this week",
+      "revenueMonth": "Revenue this month"
+    },
+    "birthdays": {
+      "title": "Student birthdays",
+      "subtitle": "Students with birthdays during the current calendar month and next calendar month.",
+      "currentMonth": "This month: {month}",
+      "nextMonth": "Next month: {month}",
+      "emptyCurrent": "No birthdays registered this month.",
+      "emptyNext": "No birthdays registered next month.",
+      "openMember": "View information for {name}"
+    }
+  },
+  "loading": {
+    "page": "Loading…",
+    "section": "Loading information…",
+    "members": "Loading students…",
+    "memberDetail": "Loading student…",
+    "saving": "Saving…",
+    "preparing": "Preparing information…"
+  },
+  "members": {
+    "list": {
+      "title": "Students",
+      "subtitle": "Gojukan Bosques de Santa Anita students",
+      "new": "New member",
+      "transfers": "Transfers",
+      "searchPlaceholder": "Search by name or code",
+      "filterStatusAll": "All statuses",
+      "filterDojoAll": "All dojos",
+      "empty": "No members yet. Add the first one.",
+      "emptyRank": "No rank",
+      "emptyAge": "—",
+      "emptyClass": "No class",
+      "photoAlt": "Photo of {name}",
+      "openDetail": "View details for {name}",
+      "columns": {
+        "student": "Student",
+        "name": "Name",
+        "dojo": "Dojo",
+        "rank": "Rank",
+        "age": "Age",
+        "class": "Class",
+        "absences": "Monthly absences",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "temporary_leave": "Temporary leave",
+        "permanent_leave": "Permanent leave",
+        "recovery": "Recovery",
+        "sick": "Sick"
+      },
+      "absences": {
+        "count": "{count, plural, =0 {0 absences} one {# absence} other {# absences}}"
+      },
+      "sort": {
+        "ascending": "Sort {column} ascending",
+        "descending": "Sort {column} descending"
+      },
+      "pageSize": {
+        "label": "Show",
+        "ariaLabel": "Students per page"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "showing": "Showing {from}–{to} of {total}"
+      }
+    },
+    "form": {
+      "createTitle": "New member",
+      "editTitle": "Edit member",
+      "firstName": "First name",
+      "firstNameKatakana": "First name in katakana",
+      "firstNameKatakanaAuto": "Generated automatically from the first name.",
+      "lastName": "Last name",
+      "code": "Code",
+      "curp": "CURP",
+      "email": "Email",
+      "phone": "Phone",
+      "emergencyPhone": "Emergency phone",
+      "dateOfBirth": "Date of birth",
+      "bloodType": "Blood type",
+      "specialCareNotes": "Special care notes",
+      "dojo": "Dojo",
+      "status": "Status",
+      "notes": "Notes",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "createdToast": "Member created",
+      "updatedToast": "Member updated",
+      "errors": {
+        "generic": "The member could not be saved.",
+        "noOrganizationContext": "No organization is selected.",
+        "validationFailed": "Review the form data.",
+        "notFound": "We could not find this member."
+      },
+      "validation": {
+        "required": "Required",
+        "invalidEmail": "Invalid email",
+        "invalidCurp": "Invalid CURP",
+        "invalidDate": "Use YYYY-MM-DD format",
+        "invalidDojo": "Select a valid dojo",
+        "invalidStatus": "Select a valid status",
+        "tooLong10": "Maximum 10 characters",
+        "tooLong40": "Maximum 40 characters",
+        "tooLong80": "Maximum 80 characters",
+        "tooLong120": "Maximum 120 characters",
+        "tooLong1000": "Maximum 1000 characters",
+        "tooLong2000": "Maximum 2000 characters"
+      }
+    },
+    "detail": {
+      "fallbackTitle": "Member",
+      "back": "Back to members",
+      "photoAlt": "Photo of {name}",
+      "emptyValue": "Not registered",
+      "emptyRank": "No rank",
+      "codeValue": "Code {code}",
+      "ageValue": "{age} years old",
+      "actions": {
+        "promote": "Promote",
+        "edit": "Edit",
+        "transfer": "Transfer",
+        "withdraw": "Withdraw",
+        "close": "Close",
+        "saving": "Saving…",
+        "confirmPromote": "Confirm promotion",
+        "confirmTransfer": "Confirm transfer",
+        "confirmWithdraw": "Confirm withdrawal",
+        "promoteSuccess": "Member promoted",
+        "transferSuccess": "Member transferred",
+        "statusSuccess": "Status updated"
+      },
+      "fields": {
+        "curp": "CURP",
+        "dateOfBirth": "Date of birth",
+        "age": "Age",
+        "bloodType": "Blood type",
+        "specialCareNotes": "Special care notes",
+        "emergencyPhone": "Emergency phone",
+        "phone": "Phone"
+      },
+      "promote": {
+        "title": "Promote member",
+        "currentRank": "Current rank",
+        "targetRank": "New rank",
+        "examDate": "Exam date",
+        "score": "Score",
+        "notes": "Notes"
+      },
+      "transfer": {
+        "title": "Transfer member",
+        "currentDojo": "Current dojo",
+        "targetDojo": "Target dojo",
+        "notes": "Notes"
+      },
+      "withdraw": {
+        "title": "Withdraw member",
+        "status": "New status",
+        "notes": "Notes"
+      },
+      "classes": {
+        "title": "Classes",
+        "subtitle": "Active classes this student attends.",
+        "empty": "This student has no assigned classes."
+      },
+      "classActions": {
+        "assign": "Assign class",
+        "remove": "Remove class",
+        "assigned": "Class assigned",
+        "removed": "Class removed",
+        "errors": {
+          "generic": "The class could not be updated.",
+          "noOrganizationContext": "No organization is selected.",
+          "validationFailed": "Review the data.",
+          "notFound": "We could not find the record.",
+          "invalidDojo": "Select a valid dojo.",
+          "invalidClass": "Select a valid class.",
+          "invalidMember": "Select a valid member.",
+          "dojoMismatch": "The class must belong to the student's dojo."
+        }
+      },
+      "exams": {
+        "title": "Exams",
+        "empty": "No exams are registered yet.",
+        "rank": "Rank",
+        "date": "Date",
+        "score": "Score",
+        "status": "Status"
+      },
+      "blackBelts": {
+        "title": "Black Belt League",
+        "empty": "No league results are registered yet.",
+        "event": "League",
+        "date": "Date",
+        "category": "Category",
+        "result": "Result"
+      },
+      "promotionStatus": {
+        "recommended": "Recommended",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "actionErrors": {
+        "generic": "The action could not be completed.",
+        "noOrganizationContext": "No organization is selected.",
+        "validationFailed": "Review the data.",
+        "notFound": "We could not find this member.",
+        "invalidRank": "Select a valid rank.",
+        "alreadyHighestRank": "The selected rank is not higher than the current rank.",
+        "invalidDojo": "Select a valid dojo.",
+        "invalidClass": "Select a valid class."
+      },
+      "notes": "Notes",
+      "noEmail": "No email",
+      "noPhone": "No phone",
+      "currentRank": "Current rank"
+    }
+  },
+  "classes": {
+    "title": "Classes",
+    "subtitle": "Create groups, set days and schedule, and assign students to the roster.",
+    "new": "Add class",
+    "close": "Close",
+    "listTitle": "Weekly schedule",
+    "empty": "No classes are registered yet.",
+    "saving": "Saving…",
+    "save": "Save class",
+    "created": "Class created",
+    "openDetail": "View class details for {name}",
+    "studentCount": "{count, plural, =0 {0 students} one {# student} other {# students}}",
+    "capacityValue": "{count}/{capacity} students",
+    "columns": {
+      "schedule": "Schedule",
+      "name": "Class",
+      "dojo": "Dojo",
+      "students": "Students"
+    },
+    "form": {
+      "name": "Name",
+      "dojo": "Dojo",
+      "days": "Days",
+      "startTime": "Start",
+      "endTime": "End",
+      "capacity": "Capacity",
+      "notes": "Notes"
+    },
+    "errors": {
+      "generic": "The class could not be saved.",
+      "noOrganizationContext": "No organization is selected.",
+      "validationFailed": "Review the form data.",
+      "notFound": "We could not find this class.",
+      "invalidDojo": "Select a valid dojo.",
+      "invalidClass": "Select a valid class.",
+      "invalidMember": "Select a valid member.",
+      "dojoMismatch": "The class must belong to the student's dojo."
+    },
+    "detail": {
+      "fallbackTitle": "Class",
+      "back": "Back to classes",
+      "roster": "Assigned students",
+      "emptyRoster": "This class has no assigned students yet.",
+      "emptyRank": "No rank",
+      "assign": "Assign student",
+      "remove": "Remove",
+      "assigned": "Student assigned",
+      "removed": "Student removed",
+      "notes": "Notes",
+      "studentCount": "{count, plural, =0 {0 students} one {# student} other {# students}}",
+      "capacityValue": "{count}/{capacity} students",
+      "errors": {
+        "generic": "The class could not be updated.",
+        "noOrganizationContext": "No organization is selected.",
+        "validationFailed": "Review the data.",
+        "notFound": "We could not find this class.",
+        "invalidDojo": "Select a valid dojo.",
+        "invalidClass": "Select a valid class.",
+        "invalidMember": "Select a valid member.",
+        "dojoMismatch": "The class must belong to the student's dojo."
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "errorDescription": "Something went wrong. Try again.",
+    "errorId": "Error ID: {id}",
+    "retry": "Retry",
+    "notFound": "Not found",
+    "notFoundDescription": "We couldn't find what you were looking for.",
+    "goHome": "Go to dashboard",
+    "comingSoon": "Coming soon.",
+    "skipToContent": "Skip to content",
+    "noOrganizationContext": "No organization is selected."
+  }
+}

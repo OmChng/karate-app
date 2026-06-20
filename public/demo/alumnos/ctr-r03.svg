@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Alumno demo CTR-R03">
+  <rect width="160" height="160" rx="80" fill="#ecfeff"/>
+  <circle cx="80" cy="62" r="30" fill="#deb08f"/>
+  <path d="M32 144c5-31 24-48 48-48s43 17 48 48" fill="#7c3aed"/>
+  <path d="M46 64c5-31 62-31 68 0-23-14-47-14-68 0z" fill="#2f1f15"/>
+  <text x="80" y="134" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#fff">DL</text>
+</svg>

@@ -1,0 +1,1178 @@
+{
+  "app": {
+    "name": "GOJU-KAN / Sensei",
+    "tagline": "Plataforma administrativa para organizaciones de karate"
+  },
+  "nav": {
+    "dashboard": "Inicio",
+    "finances": "Finanzas",
+    "staff": "Staff",
+    "members": "Alumnos",
+    "clients": "Clientes",
+    "rooms": "Salones",
+    "classes": "Clases",
+    "samples": "Pruebas",
+    "exams": "Exámenes",
+    "blackBelts": "Liga de Cintas Negras",
+    "plans": "Planes",
+    "cashRegister": "Cajas",
+    "cutoff": "Corte",
+    "expenses": "Gastos",
+    "inventory": "Inventario",
+    "attendance": "Asistencia",
+    "ranks": "Rangos",
+    "dojos": "Dojos",
+    "instructors": "Instructores",
+    "payments": "Mensualidades",
+    "events": "Eventos",
+    "announcements": "Anuncios",
+    "reports": "Reporte",
+    "settings": "Configuración",
+    "signOut": "Cerrar sesión",
+    "switchToDark": "Cambiar a modo oscuro",
+    "switchToLight": "Cambiar a modo claro",
+    "enableLargeText": "Activar texto grande",
+    "disableLargeText": "Desactivar texto grande",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "collapseMenu": "Contraer menú",
+    "expandMenu": "Expandir menú",
+    "currentUser": "Usuario actual: {name}",
+    "unknownUser": "Usuario",
+    "activeSession": "Sesión activa",
+    "language": "Idioma",
+    "primary": "Navegación principal"
+  },
+  "auth": {
+    "loginTitle": "Iniciar sesión",
+    "identifierLabel": "Email o teléfono",
+    "identifierPlaceholder": "ejemplo@correo.com o 5512345678",
+    "passwordLabel": "Contraseña",
+    "submit": "Entrar",
+    "submitting": "Entrando…",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "invalidCredentials": "Credenciales inválidas",
+    "signedInAs": "Has iniciado sesión como {name}"
+  },
+  "dashboard": {
+    "title": "Inicio",
+    "welcome": "Bienvenida/o, {name}",
+    "kpis": {
+      "members": "Miembros activos",
+      "classesToday": "Clases hoy",
+      "attendanceWeek": "Asistencia esta semana",
+      "revenueMonth": "Ingresos del mes"
+    },
+    "birthdays": {
+      "title": "Cumpleaños de alumnos",
+      "subtitle": "Alumnos con cumpleaños durante el mes actual y el próximo mes calendario.",
+      "currentMonth": "Este mes: {month}",
+      "nextMonth": "Próximo mes: {month}",
+      "emptyCurrent": "No hay cumpleaños registrados este mes.",
+      "emptyNext": "No hay cumpleaños registrados el próximo mes.",
+      "openMember": "Ver información de {name}"
+    }
+  },
+  "loading": {
+    "page": "Cargando…",
+    "section": "Cargando información…",
+    "members": "Cargando alumnos…",
+    "memberDetail": "Cargando alumno…",
+    "saving": "Guardando…",
+    "preparing": "Preparando información…"
+  },
+  "members": {
+    "list": {
+      "title": "Alumnos",
+      "subtitle": "Alumnos de Gojukan Bosques de Santa Anita",
+      "new": "Nuevo miembro",
+      "transfers": "Transferencias",
+      "searchPlaceholder": "Buscar por nombre o código",
+      "filterStatusAll": "Todos los estados",
+      "filterDojoAll": "Todos los dojos",
+      "empty": "Aún no hay miembros. Agrega el primero.",
+      "emptyRank": "Sin grado",
+      "emptyAge": "—",
+      "emptyClass": "Sin clase",
+      "photoAlt": "Foto de {name}",
+      "openDetail": "Ver detalle de {name}",
+      "columns": {
+        "student": "Alumno",
+        "name": "Nombre",
+        "dojo": "Dojo",
+        "rank": "Grado",
+        "age": "Edad",
+        "class": "Clase",
+        "absences": "Faltas del mes",
+        "status": "Estado"
+      },
+      "status": {
+        "active": "Activo",
+        "temporary_leave": "Baja temporal",
+        "permanent_leave": "Baja permanente",
+        "recovery": "Recuperación",
+        "sick": "Enfermo"
+      },
+      "absences": {
+        "count": "{count, plural, =0 {0 faltas} one {# falta} other {# faltas}}"
+      },
+      "sort": {
+        "ascending": "Ordenar {column} de forma ascendente",
+        "descending": "Ordenar {column} de forma descendente"
+      },
+      "pageSize": {
+        "label": "Ver",
+        "ariaLabel": "Alumnos por página"
+      },
+      "pagination": {
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "showing": "Mostrando {from}–{to} de {total}"
+      }
+    },
+    "form": {
+      "createTitle": "Nuevo alumno",
+      "editTitle": "Editar alumno",
+      "firstName": "Nombre",
+      "firstNameKatakana": "Nombre en katakana",
+      "firstNameKatakanaAuto": "Se genera automáticamente a partir del nombre.",
+      "lastName": "Apellido",
+      "code": "Código",
+      "curp": "CURP",
+      "email": "Email",
+      "phone": "Teléfono",
+      "emergencyPhone": "Teléfono de emergencia",
+      "dateOfBirth": "Fecha de nacimiento",
+      "bloodType": "Tipo de sangre",
+      "specialCareNotes": "Cuidados especiales",
+      "dojo": "Dojo",
+      "status": "Estado",
+      "notes": "Notas",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "createdToast": "Miembro creado",
+      "updatedToast": "Miembro actualizado",
+      "errors": {
+        "generic": "No se pudo guardar el miembro.",
+        "noOrganizationContext": "No hay una organización seleccionada.",
+        "validationFailed": "Revisa los datos del formulario.",
+        "notFound": "No encontramos este miembro."
+      },
+      "validation": {
+        "required": "Requerido",
+        "invalidEmail": "Email inválido",
+        "invalidCurp": "CURP inválida",
+        "invalidDate": "Usa el formato AAAA-MM-DD",
+        "invalidDojo": "Selecciona un dojo válido",
+        "invalidStatus": "Selecciona un estado válido",
+        "tooLong10": "Máximo 10 caracteres",
+        "tooLong40": "Máximo 40 caracteres",
+        "tooLong80": "Máximo 80 caracteres",
+        "tooLong120": "Máximo 120 caracteres",
+        "tooLong1000": "Máximo 1000 caracteres",
+        "tooLong2000": "Máximo 2000 caracteres"
+      }
+    },
+    "detail": {
+      "fallbackTitle": "Alumno",
+      "back": "Volver a alumnos",
+      "photoAlt": "Foto de {name}",
+      "emptyValue": "Sin registrar",
+      "emptyRank": "Sin grado",
+      "codeValue": "Código {code}",
+      "ageValue": "{age} años",
+      "actions": {
+        "promote": "Promover",
+        "edit": "Editar",
+        "transfer": "Transferir",
+        "withdraw": "Dar de baja",
+        "close": "Cerrar",
+        "saving": "Guardando…",
+        "confirmPromote": "Confirmar promoción",
+        "confirmTransfer": "Confirmar transferencia",
+        "confirmWithdraw": "Confirmar baja",
+        "promoteSuccess": "Alumno promovido",
+        "transferSuccess": "Alumno transferido",
+        "statusSuccess": "Estado actualizado"
+      },
+      "fields": {
+        "curp": "CURP",
+        "dateOfBirth": "Fecha de nacimiento",
+        "age": "Edad",
+        "bloodType": "Tipo de sangre",
+        "specialCareNotes": "Cuidados especiales",
+        "emergencyPhone": "Teléfono de emergencia",
+        "phone": "Teléfono"
+      },
+      "promote": {
+        "title": "Promover alumno",
+        "currentRank": "Grado actual",
+        "targetRank": "Nuevo grado",
+        "examDate": "Fecha de examen",
+        "score": "Calificación",
+        "notes": "Notas"
+      },
+      "transfer": {
+        "title": "Transferir alumno",
+        "currentDojo": "Dojo actual",
+        "targetDojo": "Dojo destino",
+        "notes": "Notas"
+      },
+      "withdraw": {
+        "title": "Dar de baja",
+        "status": "Nuevo estado",
+        "notes": "Notas"
+      },
+      "classes": {
+        "title": "Clases",
+        "subtitle": "Clases activas a las que atiende el alumno.",
+        "empty": "Este alumno no tiene clases asignadas."
+      },
+      "classActions": {
+        "assign": "Asignar clase",
+        "remove": "Quitar clase",
+        "assigned": "Clase asignada",
+        "removed": "Clase retirada",
+        "errors": {
+          "generic": "No se pudo actualizar la clase.",
+          "noOrganizationContext": "No hay una organización seleccionada.",
+          "validationFailed": "Revisa los datos.",
+          "notFound": "No encontramos el registro.",
+          "invalidDojo": "Selecciona un dojo válido.",
+          "invalidClass": "Selecciona una clase válida.",
+          "invalidMember": "Selecciona un alumno válido.",
+          "dojoMismatch": "La clase debe pertenecer al dojo del alumno."
+        }
+      },
+      "exams": {
+        "title": "Exámenes",
+        "empty": "Aún no hay exámenes registrados.",
+        "rank": "Grado",
+        "date": "Fecha",
+        "score": "Calificación",
+        "status": "Estado"
+      },
+      "blackBelts": {
+        "title": "Liga de Cintas Negras",
+        "empty": "Aún no hay resultados de liga registrados.",
+        "event": "Liga",
+        "date": "Fecha",
+        "category": "Categoría",
+        "result": "Resultado"
+      },
+      "promotionStatus": {
+        "recommended": "Recomendado",
+        "approved": "Aprobado",
+        "rejected": "Rechazado",
+        "cancelled": "Cancelado"
+      },
+      "actionErrors": {
+        "generic": "No se pudo completar la acción.",
+        "noOrganizationContext": "No hay una organización seleccionada.",
+        "validationFailed": "Revisa los datos.",
+        "notFound": "No encontramos este alumno.",
+        "invalidRank": "Selecciona un grado válido.",
+        "alreadyHighestRank": "El grado seleccionado no es mayor al actual.",
+        "invalidDojo": "Selecciona un dojo válido.",
+        "invalidClass": "Selecciona una clase válida."
+      },
+      "notes": "Notas",
+      "noEmail": "Sin email",
+      "noPhone": "Sin teléfono",
+      "currentRank": "Rango actual"
+    }
+  },
+  "classes": {
+    "title": "Clases",
+    "subtitle": "Crea grupos, define días y horario, y asigna alumnos al roster.",
+    "new": "Agregar clase",
+    "close": "Cerrar",
+    "listTitle": "Horario semanal",
+    "empty": "Aún no hay clases registradas.",
+    "saving": "Guardando…",
+    "save": "Guardar clase",
+    "created": "Clase creada",
+    "openDetail": "Ver detalle de clase {name}",
+    "studentCount": "{count, plural, =0 {0 alumnos} one {# alumno} other {# alumnos}}",
+    "capacityValue": "{count}/{capacity} alumnos",
+    "columns": {
+      "schedule": "Horario",
+      "name": "Clase",
+      "dojo": "Dojo",
+      "students": "Alumnos"
+    },
+    "form": {
+      "name": "Nombre",
+      "dojo": "Dojo",
+      "days": "Días",
+      "startTime": "Inicio",
+      "endTime": "Fin",
+      "capacity": "Cupo",
+      "notes": "Notas"
+    },
+    "errors": {
+      "generic": "No se pudo guardar la clase.",
+      "noOrganizationContext": "No hay una organización seleccionada.",
+      "validationFailed": "Revisa los datos del formulario.",
+      "notFound": "No encontramos la clase.",
+      "invalidDojo": "Selecciona un dojo válido.",
+      "invalidClass": "Selecciona una clase válida.",
+      "invalidMember": "Selecciona un alumno válido.",
+      "dojoMismatch": "La clase debe pertenecer al dojo del alumno."
+    },
+    "detail": {
+      "fallbackTitle": "Clase",
+      "back": "Volver a clases",
+      "roster": "Alumnos asignados",
+      "emptyRoster": "Esta clase aún no tiene alumnos asignados.",
+      "emptyRank": "Sin grado",
+      "assign": "Asignar alumno",
+      "remove": "Quitar",
+      "assigned": "Alumno asignado",
+      "removed": "Alumno retirado",
+      "notes": "Notas",
+      "studentCount": "{count, plural, =0 {0 alumnos} one {# alumno} other {# alumnos}}",
+      "capacityValue": "{count}/{capacity} alumnos",
+      "errors": {
+        "generic": "No se pudo actualizar la clase.",
+        "noOrganizationContext": "No hay una organización seleccionada.",
+        "validationFailed": "Revisa los datos.",
+        "notFound": "No encontramos la clase.",
+        "invalidDojo": "Selecciona un dojo válido.",
+        "invalidClass": "Selecciona una clase válida.",
+        "invalidMember": "Selecciona un alumno válido.",
+        "dojoMismatch": "La clase debe pertenecer al dojo del alumno."
+      }
+    }
+  },
+  "legacy": {
+    "pages": {
+      "staff": {
+        "eyebrow": "Dojo Bosques de Santa Anita",
+        "title": "Staff",
+        "subtitle": "Roster operativo del dojo con directores, senseis y recepción. Replica la página de Staff con tarjetas más claras para tablet.",
+        "primaryAction": { "label": "Agregar staff", "href": "/instructors/new" },
+        "metrics": [
+          {
+            "label": "Personas activas",
+            "value": "3",
+            "detail": "Director, instructor y recepción"
+          },
+          {
+            "label": "Clases cubiertas",
+            "value": "7",
+            "detail": "Grupos observados en el legado",
+            "tone": "good"
+          },
+          { "label": "Pendientes", "value": "0", "detail": "Sin invitaciones abiertas" }
+        ],
+        "sections": [
+          {
+            "type": "cards",
+            "title": "Equipo del dojo",
+            "items": [
+              {
+                "title": "Luis Manuel Real García",
+                "description": "Director y sensei principal de Bosques de Santa Anita.",
+                "meta": "Rol: Director",
+                "status": "Activo"
+              },
+              {
+                "title": "Jorge Alfaro",
+                "description": "Staff operativo con acceso a detalle de perfil.",
+                "meta": "Rol: Staff",
+                "status": "Activo"
+              },
+              {
+                "title": "Recepción Bosques",
+                "description": "Cuenta de recepción para caja, alumnos y operación diaria.",
+                "meta": "Rol: Recepción",
+                "status": "Activo"
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "title": "Permisos operativos",
+            "headers": ["Área", "Acceso", "Uso"],
+            "rows": [
+              ["Alumnos", "Lectura y edición", "Alta, seguimiento e inactivos"],
+              ["Finanzas", "Caja y reportes", "Cobros, cortes y mensualidades"],
+              ["Clases", "Gestión", "Grupos, horarios y salones"]
+            ]
+          }
+        ]
+      },
+      "staffForm": {
+        "eyebrow": "Staff",
+        "title": "Agregar staff",
+        "subtitle": "Alta de instructor, recepción o director con permisos por dojo.",
+        "primaryAction": { "label": "Guardar staff" },
+        "secondaryAction": { "label": "Cancelar", "href": "/instructors" },
+        "metrics": [
+          { "label": "Rol requerido", "value": "Sí", "detail": "Define el acceso inicial" },
+          { "label": "Dojo", "value": "Bosques", "detail": "Sucursal seleccionada" }
+        ],
+        "sections": [
+          {
+            "type": "form",
+            "title": "Datos personales",
+            "fields": ["Nombre", "Teléfono", "Email", "Rol", "Dojo", "Notas"]
+          },
+          {
+            "type": "cards",
+            "title": "Permisos iniciales",
+            "items": [
+              { "title": "Director", "description": "Acceso completo a operación del dojo." },
+              { "title": "Sensei", "description": "Clases, asistencia, alumnos y exámenes." },
+              { "title": "Recepción", "description": "Alumnos, clientes, caja y cortes." }
+            ]
+          }
+        ]
+      },
+      "staffDetail": {
+        "eyebrow": "Staff",
+        "title": "Detalle de staff",
+        "subtitle": "Perfil operativo con rol, clases asignadas y actividad reciente.",
+        "primaryAction": { "label": "Editar staff" },
+        "secondaryAction": { "label": "Volver", "href": "/instructors" },
+        "metrics": [
+          {
+            "label": "Estado",
+            "value": "Activo",
+            "detail": "Puede operar el dojo",
+            "tone": "good"
+          },
+          { "label": "Clases", "value": "7", "detail": "Asignadas esta semana" },
+          { "label": "Último acceso", "value": "Hoy", "detail": "Sesión de operación" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Clases asignadas",
+            "headers": ["Grupo", "Salón", "Horario", "Rol"],
+            "rows": [
+              ["LMV 4-5", "Dojo", "Lu Mi Vi 16:00", "Sensei"],
+              ["MJV 5-6", "Dojo", "Ma Ju Vi 17:00", "Sensei"],
+              ["MJV 6-7", "Dojo", "Ma Ju Vi 18:00", "Sensei"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Actividad",
+            "items": [
+              {
+                "title": "Asistencia",
+                "description": "Último pase de lista pendiente de migración."
+              },
+              { "title": "Caja", "description": "Sin movimientos asignados al usuario en demo." }
+            ]
+          }
+        ]
+      },
+      "clients": {
+        "eyebrow": "Clientes",
+        "title": "Clientes",
+        "subtitle": "Vista de cuentas responsables y relación con alumnos, equivalente a Clientes en el sistema actual.",
+        "primaryAction": { "label": "Registrar cliente" },
+        "metrics": [
+          {
+            "label": "Clientes activos",
+            "value": "15",
+            "detail": "Captura observada en finanzas",
+            "tone": "good"
+          },
+          { "label": "Con adeudo", "value": "0", "detail": "Sin adeudos demo", "tone": "warning" },
+          {
+            "label": "Sin contacto",
+            "value": "2",
+            "detail": "Requieren actualización",
+            "tone": "warning"
+          }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Directorio de clientes",
+            "headers": ["Cliente", "Alumno vinculado", "Contacto", "Estado"],
+            "rows": [
+              [
+                "Familia González Alcalá",
+                "Emma Sofía / Luis Carlos",
+                "Teléfono registrado",
+                "Activo"
+              ],
+              ["Familia Quevedo González", "Isaac", "Teléfono registrado", "Activo"],
+              ["Familia Márquez Gutiérrez", "Leonardo", "Email pendiente", "Actualizar"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Acciones frecuentes",
+            "items": [
+              {
+                "title": "Revisar cuenta",
+                "description": "Ver mensualidades, pagos recientes y saldo por familia."
+              },
+              {
+                "title": "Actualizar contacto",
+                "description": "Mantener teléfono, email y tutor principal listos para avisos."
+              },
+              {
+                "title": "Vincular alumno",
+                "description": "Asociar hermanos o menores a un mismo responsable de pago."
+              }
+            ]
+          }
+        ]
+      },
+      "rooms": {
+        "eyebrow": "Salones",
+        "title": "Salones",
+        "subtitle": "Administración de espacios físicos del dojo para asignarlos a clases, cupos y horarios.",
+        "primaryAction": { "label": "Agregar salón" },
+        "metrics": [
+          { "label": "Salones", "value": "1", "detail": "Dojo principal" },
+          { "label": "Clases asignadas", "value": "7", "detail": "Horarios semanales" },
+          { "label": "Capacidad útil", "value": "20", "detail": "Alumnos por bloque" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Salones del dojo",
+            "headers": ["Salón", "Uso", "Capacidad", "Estado"],
+            "rows": [
+              ["Dojo", "Karate infantil, adolescentes y adultos", "20", "Activo"],
+              ["Recepción", "Cobros y atención a clientes", "4", "Operativo"]
+            ]
+          },
+          {
+            "type": "form",
+            "title": "Datos de salón",
+            "fields": ["Nombre", "Capacidad", "Descripción", "Estado"]
+          }
+        ]
+      },
+      "roomDetail": {
+        "eyebrow": "Salones",
+        "title": "Detalle de salón",
+        "subtitle": "Capacidad, horarios y clases asignadas al espacio físico del dojo.",
+        "primaryAction": { "label": "Editar salón" },
+        "secondaryAction": { "label": "Volver a salones", "href": "/rooms" },
+        "metrics": [
+          { "label": "Salón", "value": "Dojo", "detail": "Principal" },
+          { "label": "Capacidad", "value": "20", "detail": "Alumnos por bloque" },
+          { "label": "Uso semanal", "value": "7", "detail": "Clases asignadas" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Uso del salón",
+            "headers": ["Día", "Hora", "Grupo", "Sensei"],
+            "rows": [
+              ["Lunes", "16:00", "LMV 4-5", "Luis Manuel Real García"],
+              ["Miércoles", "17:00", "LMV 5-6", "Luis Manuel Real García"],
+              ["Jueves", "18:00", "MJV 6-7", "Luis Manuel Real García"]
+            ]
+          },
+          {
+            "type": "form",
+            "title": "Configuración",
+            "fields": ["Nombre", "Capacidad", "Notas", "Estado"]
+          }
+        ]
+      },
+      "classes": {
+        "eyebrow": "Clases",
+        "title": "Clases",
+        "subtitle": "Grupos, horarios, salones y senseis observados en el legado, optimizados para escaneo rápido en iPad.",
+        "primaryAction": { "label": "Agregar grupo" },
+        "secondaryAction": { "label": "Sugerencias de cambio" },
+        "metrics": [
+          { "label": "Grupos", "value": "7", "detail": "LMV y MJV" },
+          { "label": "Alumnos", "value": "71", "detail": "Total observado" },
+          { "label": "Sensei principal", "value": "1", "detail": "Luis Manuel Real García" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Horario semanal",
+            "headers": ["Grupo", "Descripción", "Alumnos", "Horario"],
+            "rows": [
+              ["LMV 4-5", "3 a 6 años · Blanca a Blanca Avanzada", "10", "Lu Mi Vi 16:00-17:00"],
+              ["LMV 5-6", "7 a 12 años · Blanca a Blanca Avanzada", "14", "Lu Mi Vi 17:00-18:00"],
+              ["LMV 6-7", "7 a 12 años · Blanca a Blanca Avanzada", "11", "Lu Mi Vi 18:00-19:00"],
+              ["MJV 5-6", "7 a 12 años · Blanca a Blanca Avanzada", "13", "Ma Ju Vi 17:00-18:00"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Flujo moderno propuesto",
+            "items": [
+              {
+                "title": "Detalle de clase",
+                "description": "Roster, asistencia y notas en una sola vista táctil."
+              },
+              {
+                "title": "Capacidad visible",
+                "description": "Alertas cuando el grupo supera el cupo del salón."
+              },
+              {
+                "title": "Cambios pendientes",
+                "description": "Solicitudes de cambio de grupo con aprobación de recepción."
+              }
+            ]
+          }
+        ]
+      },
+      "classDetail": {
+        "eyebrow": "Clases",
+        "title": "Detalle de clase",
+        "subtitle": "Vista moderna para cada grupo observado en dojoClass.php: roster, asistencia, salón, sensei y próximos horarios.",
+        "primaryAction": { "label": "Tomar asistencia", "href": "/attendance" },
+        "secondaryAction": { "label": "Volver a clases", "href": "/classes" },
+        "metrics": [
+          { "label": "Grupo", "value": "MJV 5-6", "detail": "7 a 12 años" },
+          { "label": "Alumnos", "value": "13", "detail": "Roster observado" },
+          { "label": "Salón", "value": "Dojo", "detail": "Bosques de Santa Anita" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Roster",
+            "headers": ["Alumno", "Grado", "Edad", "Estado"],
+            "rows": [
+              ["Emma Sofía González Alcalá", "10 Kyu", "Preescolar", "Activo"],
+              ["Isaac Quevedo González", "10 Kyu", "Niños", "Activo"],
+              ["Leonardo Márquez Gutiérrez", "10 Kyu", "Niños", "Activo"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Operación de clase",
+            "items": [
+              {
+                "title": "Pase de lista",
+                "description": "Botones táctiles por alumno para registrar presente, retardo, falta o justificado."
+              },
+              {
+                "title": "Cambio de grupo",
+                "description": "Solicitudes de cambio se revisan antes de mover alumnos."
+              },
+              {
+                "title": "Notas",
+                "description": "Notas de clase visibles para dirección y recepción."
+              }
+            ]
+          }
+        ]
+      },
+      "attendance": {
+        "eyebrow": "Asistencia",
+        "title": "Pase de lista",
+        "subtitle": "Flujo móvil para tomar asistencia desde la clase, con objetivos grandes para uso en dojo.",
+        "metrics": [
+          { "label": "Clase seleccionada", "value": "MJV 5-6", "detail": "Hoy 17:00-18:00" },
+          { "label": "Esperados", "value": "13", "detail": "Alumnos en roster" },
+          { "label": "Marcados", "value": "0", "detail": "Listo para captura", "tone": "warning" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Roster táctil",
+            "headers": ["Alumno", "Grado", "Estado", "Acción"],
+            "rows": [
+              ["Emma Sofía González Alcalá", "10 Kyu", "Pendiente", "Presente / Retardo / Falta"],
+              ["Isaac Quevedo González", "10 Kyu", "Pendiente", "Presente / Retardo / Falta"],
+              ["Leonardo Márquez Gutiérrez", "10 Kyu", "Pendiente", "Presente / Retardo / Falta"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Diseño para tablet",
+            "items": [
+              {
+                "title": "Objetivos de 44 px",
+                "description": "Cada botón de asistencia conserva tamaño cómodo para dedo."
+              },
+              {
+                "title": "Guardar por lote",
+                "description": "El sensei revisa el grupo antes de enviar."
+              },
+              {
+                "title": "Recuperación",
+                "description": "El siguiente paso será cola offline para clases sin buena señal."
+              }
+            ]
+          }
+        ]
+      },
+      "samples": {
+        "eyebrow": "Pruebas",
+        "title": "Pruebas",
+        "subtitle": "Repositorio de pruebas, plantillas o evaluaciones usadas por el dojo antes de exámenes formales.",
+        "primaryAction": { "label": "Agregar prueba" },
+        "metrics": [
+          { "label": "Plantillas", "value": "4", "detail": "Base para evaluación" },
+          { "label": "En revisión", "value": "1", "detail": "Pendiente de aprobar" }
+        ],
+        "sections": [
+          {
+            "type": "cards",
+            "title": "Pruebas por nivel",
+            "items": [
+              {
+                "title": "Kihon inicial",
+                "description": "Checklist para cintas blancas y amarillas."
+              },
+              {
+                "title": "Kata intermedio",
+                "description": "Evaluación técnica para naranja, azul y verde."
+              },
+              {
+                "title": "Combate controlado",
+                "description": "Criterios de seguridad y ejecución."
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "title": "Campos de captura",
+            "headers": ["Campo", "Uso"],
+            "rows": [
+              ["Nombre", "Identifica la prueba"],
+              ["Rango objetivo", "Define quién puede presentarla"],
+              ["Criterios", "Lista de puntos a evaluar"]
+            ]
+          }
+        ]
+      },
+      "exams": {
+        "eyebrow": "Exámenes",
+        "title": "Exámenes",
+        "subtitle": "Control de exámenes y promociones de grado, equivalente a la página de Examenes del legado.",
+        "primaryAction": { "label": "Programar examen" },
+        "metrics": [
+          { "label": "Próximo examen", "value": "1", "detail": "Token observado en legado" },
+          { "label": "Candidatos", "value": "12", "detail": "Por validar" },
+          { "label": "Grados", "value": "15", "detail": "Taxonomía Goju Kan" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Candidatos",
+            "headers": ["Alumno", "Grado actual", "Objetivo", "Estado"],
+            "rows": [
+              ["Aimee Valentina Ramos Téllez", "9 Kyu", "8º/7º Kyu", "Listo"],
+              ["Alexander Uriel Rosales", "4º Kyu", "3º Kyu", "Revisar asistencia"],
+              ["Dante Mariano Sandoval", "10 Kyu", "9 Kyu", "Pendiente"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Mejoras sobre el legado",
+            "items": [
+              {
+                "title": "Historial de grados",
+                "description": "Cada promoción queda ligada al alumno y aprobador."
+              },
+              {
+                "title": "Aprobación",
+                "description": "Flujo recomendado → aprobado → registrado."
+              },
+              { "title": "Evidencia", "description": "Notas y resultado por examen." }
+            ]
+          }
+        ]
+      },
+      "blackBelts": {
+        "eyebrow": "Liga de Cintas Negras",
+        "title": "Liga de Cintas Negras",
+        "subtitle": "Seguimiento de alumnos avanzados y cintas negras, observado como módulo propio en el legado.",
+        "metrics": [
+          { "label": "Candidatos", "value": "5", "detail": "Café a negra" },
+          { "label": "Cintas negras", "value": "0", "detail": "Pendiente de migración" },
+          { "label": "Revisión", "value": "Mensual", "detail": "Seguimiento técnico" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Seguimiento avanzado",
+            "headers": ["Alumno", "Grado", "Última revisión", "Siguiente paso"],
+            "rows": [
+              ["Daniel Rettig Vidales", "2º/1º Kyu", "Junio", "Evaluación técnica"],
+              ["Alexander Uriel Rosales", "4º Kyu", "Junio", "Asistencia mínima"],
+              ["Amaia Vázquez Medina", "4º Kyu", "Mayo", "Kata avanzado"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Control moderno",
+            "items": [
+              {
+                "title": "Plan individual",
+                "description": "Objetivos técnicos por alumno avanzado."
+              },
+              { "title": "Evidencia", "description": "Notas de sensei y fechas de revisión." }
+            ]
+          }
+        ]
+      },
+      "plans": {
+        "eyebrow": "Planes",
+        "title": "Planes",
+        "subtitle": "Planes de mensualidad y reglas comerciales para alumnos y clientes.",
+        "primaryAction": { "label": "Agregar plan" },
+        "metrics": [
+          { "label": "Planes activos", "value": "3", "detail": "Mensual, familiar y especial" },
+          { "label": "Moneda", "value": "MXN", "detail": "Pesos mexicanos" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Catálogo de planes",
+            "headers": ["Plan", "Frecuencia", "Monto", "Estado"],
+            "rows": [
+              ["Mensualidad base", "Mensual", "$600", "Activo"],
+              ["Segundo hermano", "Mensual", "$450", "Activo"],
+              ["Clase muestra", "Única", "$0", "Activo"]
+            ]
+          },
+          {
+            "type": "form",
+            "title": "Datos del plan",
+            "fields": ["Nombre", "Monto", "Frecuencia", "Notas"]
+          }
+        ]
+      },
+      "reports": {
+        "eyebrow": "Finanzas",
+        "title": "Reporte",
+        "subtitle": "Panel financiero del dojo con ingresos, egresos, utilidad, clientes y mensualidades.",
+        "metrics": [
+          { "label": "Total ingresos", "value": "$0", "detail": "Periodo actual" },
+          { "label": "Egresos", "value": "$0", "detail": "Periodo actual" },
+          { "label": "Clientes", "value": "15", "detail": "Dato observado" },
+          { "label": "Utilidad", "value": "$0", "detail": "Ingresos menos egresos" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Resumen mensual",
+            "headers": ["Mes", "Ingresos", "Egresos", "Utilidad"],
+            "rows": [
+              ["Ene", "$0", "$0", "$0"],
+              ["Feb", "$0", "$0", "$0"],
+              ["Mar", "$0", "$0", "$0"],
+              ["Abr", "$0", "$0", "$0"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Indicadores",
+            "items": [
+              {
+                "title": "Mensualidades",
+                "description": "Porcentaje de mensualidades cubiertas por periodo."
+              },
+              { "title": "Margen", "description": "Relación de utilidad contra ingresos." },
+              { "title": "Corte", "description": "Conecta caja diaria con reporte mensual." }
+            ]
+          }
+        ]
+      },
+      "cashRegister": {
+        "eyebrow": "Cajas",
+        "title": "Capturar pago de alumno",
+        "subtitle": "Caja rápida para recepción: seleccionar alumno, concepto, forma de pago y registrar ingreso.",
+        "primaryAction": { "label": "Registrar pago" },
+        "metrics": [
+          {
+            "label": "Caja abierta",
+            "value": "Hoy",
+            "detail": "Recepción Bosques",
+            "tone": "good"
+          },
+          { "label": "Pendientes", "value": "0", "detail": "Sin pagos por confirmar" },
+          { "label": "Métodos", "value": "4", "detail": "Efectivo, transferencia, tarjeta, otro" }
+        ],
+        "sections": [
+          {
+            "type": "form",
+            "title": "Pago",
+            "fields": ["Alumno", "Concepto", "Monto", "Método", "Referencia", "Notas"]
+          },
+          {
+            "type": "table",
+            "title": "Alumnos frecuentes",
+            "headers": ["Alumno", "Grado", "Último concepto", "Estado"],
+            "rows": [
+              ["Emma Sofía González Alcalá", "10 Kyu", "Mensualidad", "Listo"],
+              ["Isaac Quevedo González", "10 Kyu", "Mensualidad", "Listo"],
+              ["Ailec Li Jaramillo", "6º/5º Kyu", "Regularización", "Revisar"]
+            ]
+          }
+        ]
+      },
+      "payments": {
+        "eyebrow": "Finanzas",
+        "title": "Mensualidades",
+        "subtitle": "Seguimiento de cuotas mensuales por alumno, periodo, cliente y estado de pago.",
+        "metrics": [
+          { "label": "Periodo", "value": "Junio", "detail": "Mes operativo" },
+          { "label": "Pagadas", "value": "0", "detail": "Pendiente de migración" },
+          {
+            "label": "Por cobrar",
+            "value": "15",
+            "detail": "Clientes observados",
+            "tone": "warning"
+          }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Control de mensualidades",
+            "headers": ["Alumno", "Cliente", "Periodo", "Estado"],
+            "rows": [
+              ["Luis Hernández", "Familia Hernández", "Junio", "Pagada"],
+              ["María Pérez", "Familia Pérez", "Junio", "Pagada"],
+              ["Emma Sofía González Alcalá", "Familia González", "Junio", "Pendiente"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Acciones",
+            "items": [
+              {
+                "title": "Registrar pago",
+                "description": "Abre caja con alumno y concepto precargado."
+              },
+              {
+                "title": "Enviar recordatorio",
+                "description": "Pendiente para integración de correo o WhatsApp."
+              }
+            ]
+          }
+        ]
+      },
+      "cutoff": {
+        "eyebrow": "Finanzas",
+        "title": "Corte",
+        "subtitle": "Cierre de caja por día con ingresos, egresos, diferencias y responsable.",
+        "primaryAction": { "label": "Cerrar corte" },
+        "metrics": [
+          { "label": "Caja", "value": "Abierta", "detail": "Recepción Bosques", "tone": "warning" },
+          { "label": "Ingresos", "value": "$0", "detail": "Hoy" },
+          { "label": "Diferencia", "value": "$0", "detail": "Sin descuadre", "tone": "good" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Movimientos del día",
+            "headers": ["Hora", "Tipo", "Concepto", "Monto"],
+            "rows": [
+              ["16:05", "Ingreso", "Mensualidad", "$600"],
+              ["17:20", "Ingreso", "Uniforme", "$0"],
+              ["19:00", "Egreso", "Gasto menor", "$0"]
+            ]
+          },
+          {
+            "type": "form",
+            "title": "Cierre",
+            "fields": ["Efectivo contado", "Transferencias", "Tarjeta", "Observaciones"]
+          }
+        ]
+      },
+      "expenses": {
+        "eyebrow": "Finanzas",
+        "title": "Gastos",
+        "subtitle": "Cuentas por pagar y egresos del dojo, equivalente a Gastos en el legado.",
+        "primaryAction": { "label": "Registrar gasto" },
+        "metrics": [
+          { "label": "Egresos del mes", "value": "$0", "detail": "Sin captura demo" },
+          {
+            "label": "Pendientes",
+            "value": "0",
+            "detail": "Sin facturas pendientes",
+            "tone": "good"
+          }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Gastos",
+            "headers": ["Proveedor", "Concepto", "Vence", "Monto"],
+            "rows": [
+              ["Renta", "Salón", "Mensual", "$0"],
+              ["Servicios", "Luz / agua", "Mensual", "$0"],
+              ["Material", "Equipo de entrenamiento", "Eventual", "$0"]
+            ]
+          },
+          {
+            "type": "form",
+            "title": "Nuevo gasto",
+            "fields": ["Proveedor", "Concepto", "Monto", "Fecha", "Comprobante"]
+          }
+        ]
+      },
+      "inventory": {
+        "eyebrow": "Inventario",
+        "title": "Inventario",
+        "subtitle": "Control de uniformes, equipo y productos vendidos desde recepción.",
+        "primaryAction": { "label": "Agregar producto" },
+        "metrics": [
+          { "label": "Productos", "value": "6", "detail": "Uniformes y equipo" },
+          { "label": "Bajo mínimo", "value": "1", "detail": "Requiere compra", "tone": "warning" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Existencias",
+            "headers": ["Producto", "Talla", "Existencia", "Estado"],
+            "rows": [
+              ["Karategui", "4", "3", "Disponible"],
+              ["Karategui", "5", "1", "Bajo mínimo"],
+              ["Cinta blanca", "Unitalla", "10", "Disponible"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Operación",
+            "items": [
+              {
+                "title": "Venta en caja",
+                "description": "El producto debe poder agregarse al pago del alumno."
+              },
+              {
+                "title": "Reorden",
+                "description": "Alertas cuando la existencia cae debajo del mínimo."
+              }
+            ]
+          }
+        ]
+      },
+      "settings": {
+        "eyebrow": "Configurar mi dojo",
+        "title": "Datos de contacto",
+        "subtitle": "Configuración del dojo observada en el legado: director, teléfono, email, domicilio, redes y bitácora.",
+        "primaryAction": { "label": "Guardar" },
+        "metrics": [
+          { "label": "Dojo", "value": "Bosques de Santa Anita", "detail": "Sucursal activa" },
+          { "label": "Domicilio", "value": "2355-28", "detail": "Boulevard Bosques de Santa Anita" }
+        ],
+        "sections": [
+          {
+            "type": "form",
+            "title": "Contacto",
+            "fields": ["Dojo", "Director", "Teléfono", "Email", "Domicilio", "Redes sociales"]
+          },
+          {
+            "type": "table",
+            "title": "Bitácora",
+            "headers": ["Fecha", "Usuario", "Cambio"],
+            "rows": [
+              ["Hoy", "Recepción Bosques", "Revisión de datos de contacto"],
+              ["Ayer", "Admin", "Actualización de domicilio"]
+            ]
+          }
+        ]
+      },
+      "transfers": {
+        "eyebrow": "Alumnos",
+        "title": "Transferencias",
+        "subtitle": "Bandeja para solicitudes de cambio de dojo o grupo, observada como Student Transfer Requests en el legado.",
+        "primaryAction": { "label": "Nueva solicitud" },
+        "secondaryAction": { "label": "Volver a alumnos", "href": "/members" },
+        "metrics": [
+          {
+            "label": "Pendientes",
+            "value": "0",
+            "detail": "Sin solicitudes abiertas",
+            "tone": "good"
+          },
+          { "label": "Aprobadas", "value": "0", "detail": "Periodo actual" },
+          { "label": "Rechazadas", "value": "0", "detail": "Periodo actual" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Solicitudes",
+            "headers": ["Alumno", "Origen", "Destino", "Estado"],
+            "rows": [["Sin solicitudes pendientes", "Bosques", "Por definir", "Listo"]]
+          },
+          {
+            "type": "cards",
+            "title": "Reglas",
+            "items": [
+              {
+                "title": "Aprobación de origen",
+                "description": "El dojo actual confirma que el alumno puede salir."
+              },
+              {
+                "title": "Aprobación de destino",
+                "description": "El dojo receptor valida cupo y grupo sugerido."
+              },
+              {
+                "title": "Historial",
+                "description": "Cada movimiento queda en bitácora para auditoría."
+              }
+            ]
+          }
+        ]
+      },
+      "dojos": {
+        "eyebrow": "Dojos",
+        "title": "Dojos",
+        "subtitle": "Administración de sucursales de la organización. En el legado la operación está enfocada al dojo seleccionado.",
+        "primaryAction": { "label": "Agregar dojo" },
+        "metrics": [
+          {
+            "label": "Dojo activo",
+            "value": "Bosques de Santa Anita",
+            "detail": "Selector observado"
+          },
+          { "label": "Salones", "value": "1", "detail": "Dojo principal" }
+        ],
+        "sections": [
+          {
+            "type": "table",
+            "title": "Sucursales",
+            "headers": ["Dojo", "Código", "Estado", "Operación"],
+            "rows": [
+              ["Bosques de Santa Anita", "BSA", "Activo", "Dashboard, alumnos, caja y clases"],
+              ["Dojo Central", "CTR", "Demo local", "Semilla de desarrollo"]
+            ]
+          },
+          {
+            "type": "cards",
+            "title": "Alcance",
+            "items": [
+              {
+                "title": "Selector de dojo",
+                "description": "La operación debe filtrar alumnos, clases, caja y reportes por sucursal."
+              },
+              {
+                "title": "Configuración por dojo",
+                "description": "Cada sucursal conserva contacto, salones, staff y horarios."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "common": {
+    "loading": "Cargando…",
+    "error": "Ocurrió un error",
+    "errorDescription": "Algo salió mal. Intenta nuevamente.",
+    "errorId": "ID del error: {id}",
+    "retry": "Reintentar",
+    "notFound": "No encontrado",
+    "notFoundDescription": "No pudimos encontrar lo que buscas.",
+    "goHome": "Ir al tablero",
+    "comingSoon": "Próximamente disponible.",
+    "skipToContent": "Saltar al contenido",
+    "noOrganizationContext": "No hay una organización seleccionada."
+  }
+}

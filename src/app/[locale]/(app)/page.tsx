@@ -1,0 +1,275 @@
+import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { notFound } from 'next/navigation';
+import { ChevronRight } from 'lucide-react';
+import { Link } from '@/i18n/routing';
+import { auth } from '@/lib/auth';
+import { currentOrganizationId, hasRole } from '@/lib/rbac';
+import { db } from '@/db/client';
+import { members, classes, attendance, payments } from '@/db/schema';
+import { formatCurrency } from '@/lib/utils';
+import { MetricCard, type MetricTone } from '@/components/ui/metric-card';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'dashboard' });
+  return { title: t('title') };
+}
+
+export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const session = await auth();
+  const t = await getTranslations('dashboard');
+  const orgId = currentOrganizationId(session);
+  if (
+    !orgId ||
+    !hasRole(session, ['organization_admin', 'dojo_admin'], { organizationId: orgId })
+  ) {
+    notFound();
+  }
+
+  let memberCount = 0;
+  let classesToday = 0;
+  let attendanceWeek = 0;
+  let revenueMonth = 0;
+  let currentMonthBirthdays: BirthdayMember[] = [];
+  let nextMonthBirthdays: BirthdayMember[] = [];
+
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+  const currentMonthLabel = monthLabel(currentMonth, locale);
+  const nextMonthLabel = monthLabel(nextMonth, locale);
+
+  if (orgId) {
+    const start = new Date(today);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const monthStart = new Date(today);
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const startIso = start.toISOString();
+    const endIso = end.toISOString();
+    const weekAgoIso = weekAgo.toISOString();
+    const monthStartIso = monthStart.toISOString();
+
+    const [m] = await db
+      .select({ c: count() })
+      .from(members)
+      .where(
+        and(
+          eq(members.organizationId, orgId),
+          eq(members.status, 'active'),
+          isNull(members.deletedAt),
+        ),
+      );
+    memberCount = m?.c ?? 0;
+
+    const [c] = await db
+      .select({ c: count() })
+      .from(classes)
+      .where(
+        and(
+          eq(classes.organizationId, orgId),
+          sql`${classes.startsAt} >= ${startIso}::timestamptz`,
+          sql`${classes.startsAt} < ${endIso}::timestamptz`,
+        ),
+      );
+    classesToday = c?.c ?? 0;
+
+    const [a] = await db
+      .select({ c: count() })
+      .from(attendance)
+      .innerJoin(classes, eq(classes.id, attendance.classId))
+      .where(
+        and(
+          eq(classes.organizationId, orgId),
+          sql`${attendance.markedAt} >= ${weekAgoIso}::timestamptz`,
+          eq(attendance.status, 'present'),
+        ),
+      );
+    attendanceWeek = a?.c ?? 0;
+
+    const [r] = await db
+      .select({ total: sql<string>`COALESCE(SUM(${payments.amount})::text, '0')` })
+      .from(payments)
+      .where(
+        and(
+          eq(payments.organizationId, orgId),
+          sql`${payments.paidAt} >= ${monthStartIso}::timestamptz`,
+        ),
+      );
+    revenueMonth = Number(r?.total ?? 0);
+
+    const birthdayRows = await db
+      .select({
+        id: members.id,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        dateOfBirth: members.dateOfBirth,
+        birthMonth: sql<number>`extract(month from ${members.dateOfBirth})::int`,
+        birthDay: sql<number>`extract(day from ${members.dateOfBirth})::int`,
+      })
+      .from(members)
+      .where(
+        and(
+          eq(members.organizationId, orgId),
+          isNull(members.deletedAt),
+          sql`${members.dateOfBirth} is not null`,
+          sql`extract(month from ${members.dateOfBirth})::int in (${currentMonth}, ${nextMonth})`,
+        ),
+      );
+
+    const birthdayMembers = birthdayRows
+      .filter((member): member is BirthdayMember => Boolean(member.dateOfBirth))
+      .sort((a, b) => a.birthDay - b.birthDay || fullName(a).localeCompare(fullName(b), 'es-MX'));
+
+    currentMonthBirthdays = birthdayMembers.filter((member) => member.birthMonth === currentMonth);
+    nextMonthBirthdays = birthdayMembers.filter((member) => member.birthMonth === nextMonth);
+  }
+
+  const name = session?.user?.name ?? '';
+
+  const cards: Array<{ label: string; value: string; tone: MetricTone }> = [
+    {
+      label: t('kpis.members'),
+      value: memberCount.toString(),
+      tone: 'good',
+    },
+    {
+      label: t('kpis.classesToday'),
+      value: classesToday.toString(),
+      tone: 'info',
+    },
+    {
+      label: t('kpis.attendanceWeek'),
+      value: attendanceWeek.toString(),
+      tone: 'signal',
+    },
+    {
+      label: t('kpis.revenueMonth'),
+      value: formatCurrency(revenueMonth, 'MXN', 'es-MX'),
+      tone: 'good',
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('welcome', { name })}</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((c) => (
+          <MetricCard key={c.label} label={c.label} value={c.value} tone={c.tone} />
+        ))}
+      </div>
+      <section className="rounded-lg border border-border bg-card shadow-sm shadow-black/10">
+        <div className="border-b border-border p-4">
+          <h2 className="text-lg font-semibold tracking-tight">{t('birthdays.title')}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t('birthdays.subtitle')}</p>
+        </div>
+        <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
+          <BirthdayList
+            title={t('birthdays.currentMonth', { month: currentMonthLabel })}
+            empty={t('birthdays.emptyCurrent')}
+            members={currentMonthBirthdays}
+            openLabel={(name) => t('birthdays.openMember', { name })}
+          />
+          <BirthdayList
+            title={t('birthdays.nextMonth', { month: nextMonthLabel })}
+            empty={t('birthdays.emptyNext')}
+            members={nextMonthBirthdays}
+            openLabel={(name) => t('birthdays.openMember', { name })}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+interface BirthdayMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  birthMonth: number;
+  birthDay: number;
+}
+
+function BirthdayList({
+  title,
+  empty,
+  members,
+  openLabel,
+}: {
+  title: string;
+  empty: string;
+  members: BirthdayMember[];
+  openLabel: (name: string) => string;
+}) {
+  return (
+    <div className="p-4">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h3>
+      {members.length === 0 ? (
+        <p className="mt-3 rounded-md border border-border bg-secondary/60 p-3 text-sm text-muted-foreground">
+          {empty}
+        </p>
+      ) : (
+        <ul className="mt-3 flex flex-col gap-2">
+          {members.map((member) => {
+            const name = fullName(member);
+            return (
+              <li key={member.id}>
+                <Link
+                  href={{ pathname: '/members/[id]', params: { id: member.id } }}
+                  aria-label={openLabel(name)}
+                  className="group flex min-h-12 items-center justify-between gap-3 rounded-md border border-border bg-secondary/60 px-3 py-2 text-sm transition-colors duration-fast ease-standard hover:bg-purple-subtle/70 hover:text-purple-subtle-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-foreground group-hover:text-purple-subtle-foreground">
+                      {name}
+                    </span>
+                    <span className="mt-0.5 block text-muted-foreground group-hover:text-purple-subtle-foreground">
+                      {formatBirthDate(member.dateOfBirth)}
+                    </span>
+                  </span>
+                  <ChevronRight
+                    className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-purple-subtle-foreground"
+                    aria-hidden
+                  />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function fullName(member: { firstName: string; lastName: string }) {
+  return `${member.firstName} ${member.lastName}`;
+}
+
+function monthLabel(month: number, locale: string) {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-MX', { month: 'long' }).format(
+    new Date(2026, month - 1, 1),
+  );
+}
+
+function formatBirthDate(value: string) {
+  const [yearPart, monthPart, dayPart] = value.split('-').map(Number);
+  if (!yearPart || !monthPart || !dayPart) return value;
+  return new Intl.DateTimeFormat('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(yearPart, monthPart - 1, dayPart));
+}

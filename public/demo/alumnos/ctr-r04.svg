@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Alumno demo CTR-R04">
+  <rect width="160" height="160" rx="80" fill="#fff7ed"/>
+  <circle cx="80" cy="62" r="30" fill="#b87855"/>
+  <path d="M32 144c5-31 24-48 48-48s43 17 48 48" fill="#ea580c"/>
+  <path d="M50 56c13-21 47-24 61 2-19-8-39-7-61-2z" fill="#1f2937"/>
+  <text x="80" y="134" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#fff">HH</text>
+</svg>

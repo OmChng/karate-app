@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Alumno demo CTR-R01">
+  <rect width="160" height="160" rx="80" fill="#f8fafc"/>
+  <circle cx="80" cy="62" r="30" fill="#f2c9a8"/>
+  <path d="M32 144c5-31 24-48 48-48s43 17 48 48" fill="#2563eb"/>
+  <path d="M49 61c7-27 56-34 66 0-15-11-47-14-66 0z" fill="#111827"/>
+  <text x="80" y="134" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#fff">VV</text>
+</svg>

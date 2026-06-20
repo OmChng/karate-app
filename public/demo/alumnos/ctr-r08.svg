@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Alumno demo CTR-R08">
+  <rect width="160" height="160" rx="80" fill="#f5f5f4"/>
+  <circle cx="80" cy="62" r="30" fill="#a66f4f"/>
+  <path d="M32 144c5-31 24-48 48-48s43 17 48 48" fill="#78350f"/>
+  <path d="M49 58c14-23 48-26 63 0-20-8-41-7-63 0z" fill="#0f172a"/>
+  <text x="80" y="134" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#fff">DR</text>
+</svg>

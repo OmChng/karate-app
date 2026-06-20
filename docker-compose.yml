@@ -1,0 +1,55 @@
+name: sensei-modern
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sensei-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sensei}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sensei}
+      POSTGRES_DB: ${POSTGRES_DB:-sensei}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-sensei} -d ${POSTGRES_DB:-sensei}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sensei-mailhog
+    restart: unless-stopped
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
+
+  # Optional: run the app in a container for prod parity.
+  # Local dev usually runs `pnpm dev` on the host for speed.
+  app:
+    profiles: ['full']
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sensei-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sensei}:${POSTGRES_PASSWORD:-sensei}@postgres:5432/${POSTGRES_DB:-sensei}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_TRUST_HOST: 'true'
+      APP_URL: http://localhost:3000
+      SMTP_HOST: mailhog
+      SMTP_PORT: '1025'
+    ports:
+      - '3000:3000'
+
+volumes:
+  postgres-data:
+    driver: local

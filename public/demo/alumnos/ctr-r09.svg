@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Alumno demo CTR-R09">
+  <rect width="160" height="160" rx="80" fill="#f0f9ff"/>
+  <circle cx="80" cy="62" r="30" fill="#dca57d"/>
+  <path d="M32 144c5-31 24-48 48-48s43 17 48 48" fill="#1d4ed8"/>
+  <path d="M47 63c7-31 60-33 67-1-20-13-47-13-67 1z" fill="#3b2415"/>
+  <text x="80" y="134" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#fff">FC</text>
+</svg>
