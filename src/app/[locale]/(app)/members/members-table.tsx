@@ -31,7 +31,7 @@ interface Props {
 }
 
 const FIELD =
-  'min-h-12 rounded-md border border-input bg-background px-3 text-base shadow-sm transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60';
+  'min-h-12 rounded-md border border-input bg-card px-3 text-base shadow-sm transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60';
 
 const PAGE_SIZE_OPTIONS = [20, 40, 60, 80, 100] as const;
 
@@ -40,10 +40,34 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
   const tLoading = useTranslations('loading');
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const sidebar = document.querySelector<HTMLElement>('.sidebar-surface');
+
+    function readSidebarState() {
+      setSidebarCollapsed(Boolean(sidebar && sidebar.getBoundingClientRect().width < 100));
+    }
+
+    readSidebarState();
+    window.addEventListener('resize', readSidebarState);
+
+    if (!sidebar || !('ResizeObserver' in window)) {
+      return () => window.removeEventListener('resize', readSidebarState);
+    }
+
+    const observer = new ResizeObserver(readSidebarState);
+    observer.observe(sidebar);
+
+    return () => {
+      window.removeEventListener('resize', readSidebarState);
+      observer.disconnect();
+    };
   }, []);
 
   function buildHref(overrides: Partial<MemberListQuery>) {
@@ -135,6 +159,7 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
     value: String(value),
     label: String(value),
   }));
+  const tableEnabledAtTablet = sidebarCollapsed;
 
   return (
     <div className="flex flex-col gap-3" aria-busy={pending}>
@@ -192,8 +217,8 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
       </div>
       {pending && <LoadingWithElapsedTime label={tLoading('members')} />}
 
-      {/* Phone + tablet portrait: card list */}
-      <ul className="flex flex-col gap-2 lg:hidden">
+      {/* Phone + tablet when the sidebar is expanded: card list */}
+      <ul className={cn('flex flex-col gap-2', tableEnabledAtTablet ? 'lg:hidden' : 'xl:hidden')}>
         {rows.length === 0 && (
           <li className="rounded-lg border border-border bg-card p-6 text-center text-muted-foreground">
             {t('empty')}
@@ -225,7 +250,7 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <MobileFact label={t('columns.rank')} value={m.currentRankName ?? t('emptyRank')}>
-                  <RankBadge member={m} fallback={t('emptyRank')} />
+                  <RankText member={m} fallback={t('emptyRank')} />
                 </MobileFact>
                 <MobileFact label={t('columns.age')} value={formatAge(m.age, t('emptyAge'))} />
                 <MobileFact
@@ -243,14 +268,27 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
         ))}
       </ul>
 
-      {/* Desktop and tablet landscape: table */}
-      <div className={cn(tableShellClass, 'hidden lg:block')}>
-        <table className={tableClass}>
+      {/* Tablet landscape with collapsed sidebar, and wide desktop: table */}
+      <div
+        className={cn(
+          tableShellClass,
+          tableEnabledAtTablet ? 'hidden lg:block' : 'hidden xl:block',
+        )}
+      >
+        <table className={cn(tableClass, 'table-fixed')}>
+          <colgroup>
+            <col className="w-[29%]" />
+            <col className="w-[22%]" />
+            <col className="w-[7%]" />
+            <col className="w-[18%]" />
+            <col className="w-[12%]" />
+            <col className="w-[12%]" />
+          </colgroup>
           <thead className={tableHeaderClass}>
             <tr>
               <th
                 scope="col"
-                className={tableHeaderCellClass}
+                className={cn(tableHeaderCellClass, 'px-1.5')}
                 aria-sort={query.sortBy === 'name' ? sortAria(query.sortDir) : 'none'}
               >
                 <SortableHeader
@@ -268,7 +306,7 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
               </th>
               <th
                 scope="col"
-                className={tableHeaderCellClass}
+                className={cn(tableHeaderCellClass, 'px-1.5')}
                 aria-sort={query.sortBy === 'rank' ? sortAria(query.sortDir) : 'none'}
               >
                 <SortableHeader
@@ -286,7 +324,7 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
               </th>
               <th
                 scope="col"
-                className={tableHeaderCellClass}
+                className={cn(tableHeaderCellClass, 'px-1.5')}
                 aria-sort={query.sortBy === 'age' ? sortAria(query.sortDir) : 'none'}
               >
                 <SortableHeader
@@ -302,12 +340,12 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
                   )}
                 />
               </th>
-              <th scope="col" className={tableHeaderCellClass}>
+              <th scope="col" className={cn(tableHeaderCellClass, 'px-1.5')}>
                 {t('columns.class')}
               </th>
               <th
                 scope="col"
-                className={tableHeaderCellClass}
+                className={cn(tableHeaderCellClass, 'px-1.5')}
                 aria-sort={query.sortBy === 'absences' ? sortAria(query.sortDir) : 'none'}
               >
                 <SortableHeader
@@ -323,7 +361,7 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
                   )}
                 />
               </th>
-              <th scope="col" className={tableHeaderCellClass}>
+              <th scope="col" className={cn(tableHeaderCellClass, 'px-1.5')}>
                 {t('columns.status')}
               </th>
             </tr>
@@ -349,8 +387,8 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
                   'student-row-interactive group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                 )}
               >
-                <td className="px-3 py-3">
-                  <div className="inline-flex min-h-11 max-w-full items-center gap-3 rounded-md px-3 font-medium text-foreground xl:px-0">
+                <td className="px-2 py-3 align-middle">
+                  <div className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-md font-medium text-foreground">
                     <MemberAvatar
                       member={m}
                       photoAlt={t('photoAlt', { name: fullName(m) })}
@@ -366,19 +404,21 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
                     </span>
                   </div>
                 </td>
-                <td className="px-3 py-3 text-center">
-                  <RankBadge member={m} fallback={t('emptyRank')} />
+                <td className="px-2 py-3 text-center align-middle">
+                  <RankText member={m} fallback={t('emptyRank')} />
                 </td>
-                <td className="px-3 py-3 text-center tabular-nums">
+                <td className="px-2 py-3 text-center align-middle tabular-nums">
                   {formatAge(m.age, t('emptyAge'))}
                 </td>
-                <td className="px-3 py-3 text-center">{m.assignedClassName ?? t('emptyClass')}</td>
-                <td className="px-3 py-3 text-center">
+                <td className="px-2 py-3 text-center align-middle">
+                  <span className="block truncate">{m.assignedClassName ?? t('emptyClass')}</span>
+                </td>
+                <td className="px-2 py-3 text-center align-middle">
                   <SemanticStatusBadge variant={getAbsenceVariant(m.absenceTone)}>
                     {t('absences.count', { count: m.monthlyAbsences })}
                   </SemanticStatusBadge>
                 </td>
-                <td className="px-3 py-3 text-center">
+                <td className="px-2 py-3 text-center align-middle">
                   <StatusBadge member={m} label={t(`status.${m.status}`)} />
                 </td>
               </tr>
@@ -463,7 +503,7 @@ function MemberAvatar({
   );
 }
 
-function RankBadge({ member, fallback }: { member: MemberRow; fallback: string }) {
+function RankText({ member, fallback }: { member: MemberRow; fallback: string }) {
   const background = getRankIndicatorBackground({
     level: member.currentRankLevel,
     name: member.currentRankName,
@@ -471,15 +511,17 @@ function RankBadge({ member, fallback }: { member: MemberRow; fallback: string }
   });
 
   return (
-    <span className="rank-badge inline-flex min-h-7 items-center gap-2 rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-none">
-      {background && (
+    <span className="inline-grid w-[10.25rem] max-w-full grid-cols-[1.75rem_minmax(0,1fr)] items-center justify-center gap-2 text-left text-xs font-semibold leading-none text-foreground">
+      {background ? (
         <span
-          className="rank-swatch h-[1.5625rem] w-[1.5625rem] shrink-0 rounded-full border"
+          className="h-[1.5625rem] w-[1.5625rem] shrink-0 justify-self-center rounded-full border-2 border-border shadow-sm"
           style={{ background }}
           aria-hidden
         />
+      ) : (
+        <span className="h-[1.5625rem] w-[1.5625rem] shrink-0 justify-self-center" aria-hidden />
       )}
-      {member.currentRankName ?? fallback}
+      <span className="min-w-0 truncate">{member.currentRankName ?? fallback}</span>
     </span>
   );
 }
@@ -545,8 +587,8 @@ function SortableHeader({
       className={cn(
         'mx-auto inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-2 text-center transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         active
-          ? 'bg-periwinkle text-periwinkle-foreground'
-          : 'text-inherit hover:bg-black/20 hover:text-white',
+          ? 'bg-primary-subtle text-primary-subtle-foreground'
+          : 'text-inherit hover:bg-secondary hover:text-foreground',
       )}
     >
       <span>{label}</span>

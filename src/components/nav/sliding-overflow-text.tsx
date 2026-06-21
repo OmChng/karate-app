@@ -20,7 +20,14 @@ export function SlidingOverflowText({
     if (!outer || !inner) return;
 
     const measure = () => {
-      setPan(Math.max(0, inner.scrollWidth - outer.clientWidth));
+      const availableWidth = outer.clientWidth;
+      if (availableWidth <= 0) {
+        setPan(0);
+        return;
+      }
+
+      const overflow = Math.ceil(inner.scrollWidth - availableWidth);
+      setPan(overflow > 1 ? overflow : 0);
     };
 
     measure();
@@ -37,7 +44,7 @@ export function SlidingOverflowText({
       data-overflow={pan > 0 ? 'true' : undefined}
       style={{ '--sliding-overflow-pan': `${pan}px` } as CSSProperties}
     >
-      <span ref={innerRef} className="sliding-overflow-text-inner inline-block pr-3">
+      <span ref={innerRef} className="sliding-overflow-text-inner inline-block">
         {children}
       </span>
     </span>

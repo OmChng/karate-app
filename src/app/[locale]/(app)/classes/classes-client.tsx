@@ -8,9 +8,12 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ButtonSpinner } from '@/components/ui/loading';
 import { NativeSelect } from '@/components/ui/native-select';
 import {
+  panelHeaderVariants,
+  panelShellClass,
+  panelTitleClass,
   tableClass,
   tableHeaderCellClass,
-  tableHeaderClass,
+  tableHeaderVariants,
   tableRowClass,
 } from '@/components/ui/table-styles';
 import { createClassAction } from '@/server/classes/actions';
@@ -34,7 +37,7 @@ interface Props {
 const BUTTON_BASE =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 const INPUT_CLASS =
-  'min-h-11 rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'min-h-11 rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 const DAYS = ['L', 'M', 'Mi', 'J', 'V', 'S', 'D'] as const;
 
 export default function ClassesClient({ classes, dojos }: Props) {
@@ -61,16 +64,16 @@ export default function ClassesClient({ classes, dojos }: Props) {
         <CreateClassSheet dojos={dojos} />
       </header>
 
-      <section className="rounded-lg border border-border bg-card">
-        <div className="border-b border-border p-4">
-          <h2 className="text-base font-semibold">{t('listTitle')}</h2>
+      <section className={panelShellClass}>
+        <div className={panelHeaderVariants('accent')}>
+          <h2 className={panelTitleClass}>{t('listTitle')}</h2>
         </div>
         {classes.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">{t('empty')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className={tableClass}>
-              <thead className={tableHeaderClass}>
+              <thead className={tableHeaderVariants('accent')}>
                 <tr>
                   <th scope="col" className={tableHeaderCellClass}>
                     {t('columns.schedule')}

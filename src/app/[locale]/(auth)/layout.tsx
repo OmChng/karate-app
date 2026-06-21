@@ -10,9 +10,5 @@ export default async function AuthLayout({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
-      {children}
-    </div>
-  );
+  return <div className="min-h-screen bg-background">{children}</div>;
 }

@@ -86,6 +86,119 @@ export async function createClassAction(
   return { ok: true, data: { id: row!.id } };
 }
 
+export async function updateClassAction(
+  id: string,
+  input: ClassInput,
+): Promise<ClassActionResult<{ id: string }>> {
+  if (!classIdSchema.safeParse(id).success) {
+    return { ok: false, error: 'notFound' };
+  }
+
+  const raw = await auth();
+  const orgId = currentOrganizationId(raw);
+  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
+  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
+    organizationId: orgId,
+  });
+
+  const parsed = classInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'validationFailed',
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    };
+  }
+  const v = parsed.data;
+
+  const [dojo] = await db
+    .select({ id: dojos.id })
+    .from(dojos)
+    .where(and(eq(dojos.id, v.dojoId), eq(dojos.organizationId, orgId), isNull(dojos.deletedAt)));
+  if (!dojo) return { ok: false, error: 'invalidDojo' };
+
+  const [before] = await db
+    .select()
+    .from(classes)
+    .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+  if (!before) return { ok: false, error: 'notFound' };
+
+  await db
+    .update(classes)
+    .set({
+      dojoId: dojo.id,
+      name: v.name,
+      startsAt: classDateFromTime(v.startTime),
+      endsAt: classDateFromTime(v.endTime),
+      recurrenceRule: v.days.join(','),
+      capacity: v.capacity,
+      notes: v.notes,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+
+  await db.insert(auditLog).values({
+    organizationId: orgId,
+    actorUserId: session.user.id,
+    action: 'class.update',
+    entity: 'class',
+    entityId: id,
+    before: before as unknown as Record<string, unknown>,
+    after: v as unknown as Record<string, unknown>,
+  });
+
+  revalidatePath('/classes');
+  revalidatePath('/clases');
+  revalidatePath(`/classes/${id}`);
+  revalidatePath(`/clases/${id}`);
+  return { ok: true, data: { id } };
+}
+
+export async function softDeleteClassAction(id: string): Promise<ClassActionResult> {
+  if (!classIdSchema.safeParse(id).success) {
+    return { ok: false, error: 'notFound' };
+  }
+
+  const raw = await auth();
+  const orgId = currentOrganizationId(raw);
+  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
+  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
+    organizationId: orgId,
+  });
+
+  const [before] = await db
+    .select()
+    .from(classes)
+    .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+  if (!before) return { ok: false, error: 'notFound' };
+
+  await db.transaction(async (tx) => {
+    const endedAt = new Date();
+    await tx
+      .update(classes)
+      .set({ deletedAt: endedAt, updatedAt: endedAt })
+      .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+    await tx
+      .update(memberClassAssignments)
+      .set({ endedAt })
+      .where(and(eq(memberClassAssignments.classId, id), isNull(memberClassAssignments.endedAt)));
+    await tx.insert(auditLog).values({
+      organizationId: orgId,
+      actorUserId: session.user.id,
+      action: 'class.delete',
+      entity: 'class',
+      entityId: id,
+      before: before as unknown as Record<string, unknown>,
+    });
+  });
+
+  revalidatePath('/classes');
+  revalidatePath('/clases');
+  revalidatePath(`/classes/${id}`);
+  revalidatePath(`/clases/${id}`);
+  return { ok: true };
+}
+
 export async function assignMemberToClassAction(
   input: ClassAssignmentInput,
 ): Promise<ClassActionResult> {

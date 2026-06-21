@@ -9,6 +9,11 @@ import { db } from '@/db/client';
 import { members, classes, attendance, payments } from '@/db/schema';
 import { formatCurrency } from '@/lib/utils';
 import { MetricCard, type MetricTone } from '@/components/ui/metric-card';
+import {
+  panelHeaderDescriptionClass,
+  panelHeaderVariants,
+  panelShellClass,
+} from '@/components/ui/table-styles';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -168,10 +173,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           <MetricCard key={c.label} label={c.label} value={c.value} tone={c.tone} />
         ))}
       </div>
-      <section className="rounded-lg border border-border bg-card shadow-sm shadow-black/10">
-        <div className="border-b border-border p-4">
+      <section className={panelShellClass}>
+        <div className={panelHeaderVariants('accent')}>
           <h2 className="text-lg font-semibold tracking-tight">{t('birthdays.title')}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t('birthdays.subtitle')}</p>
+          <p className={panelHeaderDescriptionClass}>{t('birthdays.subtitle')}</p>
         </div>
         <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
           <BirthdayList
@@ -230,18 +235,18 @@ function BirthdayList({
                 <Link
                   href={{ pathname: '/members/[id]', params: { id: member.id } }}
                   aria-label={openLabel(name)}
-                  className="group flex min-h-12 items-center justify-between gap-3 rounded-md border border-border bg-secondary/60 px-3 py-2 text-sm transition-colors duration-fast ease-standard hover:bg-purple-subtle/70 hover:text-purple-subtle-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="group flex min-h-12 items-center justify-between gap-3 rounded-md border border-border bg-secondary/60 px-3 py-2 text-sm transition-colors duration-fast ease-standard hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <span className="min-w-0">
-                    <span className="block truncate font-medium text-foreground group-hover:text-purple-subtle-foreground">
+                    <span className="block truncate font-medium text-foreground group-hover:text-foreground">
                       {name}
                     </span>
-                    <span className="mt-0.5 block text-muted-foreground group-hover:text-purple-subtle-foreground">
+                    <span className="mt-0.5 block text-muted-foreground group-hover:text-foreground">
                       {formatBirthDate(member.dateOfBirth)}
                     </span>
                   </span>
                   <ChevronRight
-                    className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-purple-subtle-foreground"
+                    className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground"
                     aria-hidden
                   />
                 </Link>

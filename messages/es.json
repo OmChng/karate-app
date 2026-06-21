@@ -324,6 +324,11 @@
     "detail": {
       "fallbackTitle": "Clase",
       "back": "Volver a clases",
+      "edit": "Editar clase",
+      "delete": "Eliminar clase",
+      "deleteConfirm": "¿Eliminar la clase {name}? Esta acción retirará a los alumnos asignados y no se puede deshacer desde esta pantalla.",
+      "saveChanges": "Guardar cambios",
+      "updated": "Clase actualizada",
       "roster": "Alumnos asignados",
       "emptyRoster": "Esta clase aún no tiene alumnos asignados.",
       "emptyRank": "Sin grado",

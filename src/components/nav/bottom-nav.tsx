@@ -29,8 +29,8 @@ export function BottomNav() {
                 className={cn(
                   'my-1 flex h-14 flex-col items-center justify-center gap-1 rounded-md border-t-[3px] text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   active
-                    ? 'border-periwinkle bg-primary font-semibold text-primary-foreground'
-                    : 'border-transparent text-muted-foreground hover:bg-purple-subtle/70 hover:text-foreground',
+                    ? 'border-primary bg-primary-subtle font-semibold text-primary-subtle-foreground'
+                    : 'border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground',
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden />

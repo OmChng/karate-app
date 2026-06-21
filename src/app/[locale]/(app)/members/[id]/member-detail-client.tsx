@@ -9,9 +9,13 @@ import { StatusBadge as SemanticStatusBadge } from '@/components/ui/status-badge
 import { ButtonSpinner } from '@/components/ui/loading';
 import { NativeSelect } from '@/components/ui/native-select';
 import {
+  panelHeaderDescriptionClass,
+  panelHeaderVariants,
+  panelShellClass,
+  panelTitleClass,
   tableClass,
   tableHeaderCellClass,
-  tableHeaderClass,
+  tableHeaderVariants,
   tableRowClass,
   tableShellClass,
 } from '@/components/ui/table-styles';
@@ -102,7 +106,7 @@ interface Props {
 const BUTTON_BASE =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60';
 const INPUT_CLASS =
-  'min-h-11 rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60';
+  'min-h-11 rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60';
 
 export default function MemberDetailClient({
   member,
@@ -125,7 +129,7 @@ export default function MemberDetailClient({
           href="/members"
           className={cn(
             BUTTON_BASE,
-            'w-full border border-border bg-secondary text-foreground hover:bg-purple-subtle/70 hover:text-purple-subtle-foreground md:w-auto',
+            'w-full border border-border bg-secondary text-foreground hover:bg-secondary/80 md:w-auto',
           )}
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
@@ -159,14 +163,14 @@ export default function MemberDetailClient({
                   </>
                 )}
               </h1>
-              <RankDot
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <RankText
                 color={member.currentRankColor}
                 level={member.currentRankLevel}
                 name={member.currentRankName}
+                fallback={t('emptyRank')}
               />
-            </div>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span>{member.currentRankName ?? t('emptyRank')}</span>
               {member.code && <span>{t('codeValue', { code: member.code })}</span>}
             </div>
             <p className="mt-2 text-sm font-medium text-foreground">{member.dojoName}</p>
@@ -239,9 +243,11 @@ export default function MemberDetailClient({
       </section>
 
       {member.notes && (
-        <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-base font-semibold">{t('notes')}</h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{member.notes}</p>
+        <section className={panelShellClass}>
+          <div className={panelHeaderVariants('accent')}>
+            <h2 className={panelTitleClass}>{t('notes')}</h2>
+          </div>
+          <p className="whitespace-pre-wrap p-4 text-sm leading-6">{member.notes}</p>
         </section>
       )}
     </div>
@@ -531,10 +537,10 @@ function ClassesSection({
   }
 
   return (
-    <section className="rounded-lg border border-border bg-card">
-      <div className="border-b border-border p-4">
-        <h2 className="text-base font-semibold">{t('classes.title')}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t('classes.subtitle')}</p>
+    <section className={panelShellClass}>
+      <div className={panelHeaderVariants('accent')}>
+        <h2 className={panelTitleClass}>{t('classes.title')}</h2>
+        <p className={panelHeaderDescriptionClass}>{t('classes.subtitle')}</p>
       </div>
       <div className="flex flex-col gap-3 p-4">
         {activeClasses.length === 0 ? (
@@ -623,16 +629,16 @@ function HistoryTable({
   rows: string[][];
 }) {
   return (
-    <section className="rounded-lg border border-border bg-card">
-      <div className="border-b border-border p-4">
-        <h2 className="text-base font-semibold">{title}</h2>
+    <section className={panelShellClass}>
+      <div className={panelHeaderVariants('accent')}>
+        <h2 className={panelTitleClass}>{title}</h2>
       </div>
       {rows.length === 0 ? (
         <p className="p-4 text-sm text-muted-foreground">{empty}</p>
       ) : (
         <div className={cn(tableShellClass, 'rounded-none border-0 shadow-none')}>
           <table className={tableClass}>
-            <thead className={tableHeaderClass}>
+            <thead className={tableHeaderVariants('accent')}>
               <tr>
                 {headers.map((header) => (
                   <th key={header} scope="col" className={tableHeaderCellClass}>
@@ -713,23 +719,30 @@ function MemberAvatar({ member, photoAlt }: { member: MemberDetailView; photoAlt
   );
 }
 
-function RankDot({
+function RankText({
   color,
   level,
   name,
+  fallback,
 }: {
   color: string | null;
   level: number | null;
   name: string | null;
+  fallback: string;
 }) {
   const background = getRankIndicatorBackground({ color, level, name });
-  if (!background) return null;
+
   return (
-    <span
-      className="rank-swatch h-[1.5625rem] w-[1.5625rem] shrink-0 rounded-full border"
-      style={{ background }}
-      aria-hidden
-    />
+    <span className="inline-flex items-center gap-2 text-foreground">
+      {background && (
+        <span
+          className="h-[1.5625rem] w-[1.5625rem] shrink-0 rounded-full border-2 border-border shadow-sm"
+          style={{ background }}
+          aria-hidden
+        />
+      )}
+      <span>{name ?? fallback}</span>
+    </span>
   );
 }
 

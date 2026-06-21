@@ -3,9 +3,13 @@ import { Link } from '@/i18n/routing';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { MetricCard, type MetricTone } from '@/components/ui/metric-card';
 import {
+  panelHeaderDescriptionClass,
+  panelHeaderVariants,
+  panelShellClass,
+  panelTitleClass,
   tableClass,
   tableHeaderCellClass,
-  tableHeaderClass,
+  tableHeaderVariants,
   tableRowClass,
 } from '@/components/ui/table-styles';
 import esMessages from '../../../messages/es.json';
@@ -156,16 +160,11 @@ export default async function ModulePage({ locale, pageKey }: { locale: string; 
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {page.sections.map((section) => (
-          <section
-            key={section.title}
-            className="rounded-lg border border-border bg-card shadow-sm"
-          >
-            <div className="border-b border-border p-4">
-              <h2 className="text-base font-semibold">{section.title}</h2>
+          <section key={section.title} className={panelShellClass}>
+            <div className={panelHeaderVariants('accent')}>
+              <h2 className={panelTitleClass}>{section.title}</h2>
               {section.description && (
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {section.description}
-                </p>
+                <p className={panelHeaderDescriptionClass}>{section.description}</p>
               )}
             </div>
             {section.type === 'table' && <TableSectionView section={section} />}
@@ -202,7 +201,7 @@ function TableSectionView({ section }: { section: TableSection }) {
   return (
     <div className="overflow-x-auto">
       <table className={tableClass}>
-        <thead className={tableHeaderClass}>
+        <thead className={tableHeaderVariants('accent')}>
           <tr>
             {section.headers.map((header) => (
               <th key={header} scope="col" className={tableHeaderCellClass}>
@@ -389,7 +388,7 @@ function FormSectionView({ section }: { section: FormSection }) {
       {section.fields.map((field) => (
         <label key={field} className="flex flex-col gap-1.5 text-sm font-medium">
           {field}
-          <div className="min-h-11 rounded-md border border-dashed border-input bg-background" />
+          <div className="min-h-11 rounded-md border border-dashed border-input bg-card" />
         </label>
       ))}
     </div>

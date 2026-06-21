@@ -25,7 +25,7 @@ export default function LocaleSwitcher() {
         value={locale}
         onChange={onChange}
         disabled={pending}
-        className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+        className="rounded-md border border-input bg-card px-2 py-1 text-xs"
       >
         <option value="es">ES</option>
         <option value="en">EN</option>

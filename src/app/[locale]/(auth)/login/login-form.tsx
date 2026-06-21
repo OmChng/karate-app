@@ -66,7 +66,7 @@ export default function LoginForm({ next, error }: { next?: string; error?: stri
           required
           disabled={!hydrated || submitting}
           placeholder={t('identifierPlaceholder')}
-          className="min-h-11 rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-h-11 rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
 
@@ -81,7 +81,7 @@ export default function LoginForm({ next, error }: { next?: string; error?: stri
           autoComplete="current-password"
           required
           disabled={!hydrated || submitting}
-          className="min-h-11 rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-h-11 rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
 

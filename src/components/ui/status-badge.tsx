@@ -16,7 +16,7 @@ export type StatusBadgeVariant =
   | 'accent';
 
 export const statusBadgeVariantClass: Record<StatusBadgeVariant, string> = {
-  neutral: 'border-border bg-secondary text-secondary-foreground',
+  neutral: 'border-input bg-muted text-muted-foreground',
   good: 'border-success-border bg-success-subtle text-success-subtle-foreground',
   success: 'border-success-border bg-success-subtle text-success-subtle-foreground',
   risk: 'border-warning-border bg-warning-subtle text-warning-subtle-foreground',
@@ -45,7 +45,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex min-h-6 items-center rounded-full border px-2 py-0.5 text-xs font-medium leading-none',
+        'status-badge inline-flex min-h-6 items-center rounded-full border px-2 py-0.5 text-xs font-medium leading-none',
         statusBadgeVariantClass[variant],
         className,
       )}

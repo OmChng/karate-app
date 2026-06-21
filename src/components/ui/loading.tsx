@@ -72,7 +72,7 @@ export function PageLoading({ label }: { label: string }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="space-y-3">
-        <div className="h-7 w-52 animate-pulse rounded-md bg-primary-subtle" />
+        <div className="h-7 w-52 animate-pulse rounded-md bg-secondary" />
         <div className="h-4 w-full max-w-md animate-pulse rounded-md bg-secondary" />
       </div>
       <CardSkeleton />
@@ -83,9 +83,9 @@ export function PageLoading({ label }: { label: string }) {
 
 export function SectionLoading({ label }: { label: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="space-y-3">
-        <div className="h-4 w-40 animate-pulse rounded bg-primary-subtle" />
+        <div className="h-4 w-40 animate-pulse rounded bg-secondary" />
         <div className="h-3 w-full animate-pulse rounded bg-secondary" />
         <div className="h-3 w-3/4 animate-pulse rounded bg-secondary" />
       </div>
@@ -96,7 +96,12 @@ export function SectionLoading({ label }: { label: string }) {
 
 export function CardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('rounded-lg border border-border bg-card p-4 shadow-sm', className)}>
+    <div
+      className={cn(
+        'rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]',
+        className,
+      )}
+    >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="h-24 animate-pulse rounded-md bg-secondary" />
         <div className="h-24 animate-pulse rounded-md bg-secondary md:col-span-2" />
@@ -110,8 +115,8 @@ export function CardSkeleton({ className }: { className?: string }) {
 
 export function TableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
-      <div className="h-11 animate-pulse bg-primary-subtle" />
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
+      <div className="h-11 animate-pulse bg-secondary" />
       <div className="divide-y divide-border">
         {Array.from({ length: rows }).map((_, index) => (
           <div key={index} className="grid grid-cols-6 gap-3 px-4 py-3">

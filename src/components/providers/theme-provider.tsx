@@ -64,8 +64,8 @@ function resolveTheme(theme: ThemeChoice): StoredTheme {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<ThemeChoice>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<StoredTheme>('dark');
+  const [theme, setTheme] = useState<ThemeChoice>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<StoredTheme>('light');
   const [fontSize, setFontSize] = useState<FontSizeChoice>('default');
 
   const syncTheme = useCallback((nextTheme: ThemeChoice) => {
@@ -81,7 +81,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    syncTheme(readStoredTheme() ?? 'dark');
+    syncTheme(readStoredTheme() ?? 'light');
     syncFontSize(readStoredFontSize());
   }, [syncFontSize, syncTheme]);
 
@@ -97,7 +97,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key === THEME_STORAGE_KEY) {
-        syncTheme(readStoredTheme() ?? 'dark');
+        syncTheme(readStoredTheme() ?? 'light');
       }
       if (event.key === FONT_SIZE_STORAGE_KEY) {
         syncFontSize(readStoredFontSize());

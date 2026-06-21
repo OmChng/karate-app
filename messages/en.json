@@ -324,6 +324,11 @@
     "detail": {
       "fallbackTitle": "Class",
       "back": "Back to classes",
+      "edit": "Edit class",
+      "delete": "Delete class",
+      "deleteConfirm": "Delete class {name}? This will remove assigned students and cannot be undone from this screen.",
+      "saveChanges": "Save changes",
+      "updated": "Class updated",
       "roster": "Assigned students",
       "emptyRoster": "This class has no assigned students yet.",
       "emptyRank": "No rank",

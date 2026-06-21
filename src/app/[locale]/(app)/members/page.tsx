@@ -8,6 +8,12 @@ import { dojos } from '@/db/schema';
 import { listMembersForOrg } from '@/server/members/queries';
 import { memberListQuerySchema, type MemberListQuery } from '@/server/members/schemas';
 import { Link } from '@/i18n/routing';
+import { cn } from '@/lib/utils';
+import {
+  panelHeaderDescriptionClass,
+  panelHeaderVariants,
+  panelShellClass,
+} from '@/components/ui/table-styles';
 import MembersTable from './members-table';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -65,16 +71,21 @@ export default async function MembersPage({
     .where(eq(dojos.organizationId, orgId));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+    <section className={panelShellClass}>
+      <div
+        className={cn(
+          panelHeaderVariants('accent'),
+          'flex flex-wrap items-end justify-between gap-3',
+        )}
+      >
+        <div className="max-w-3xl">
           <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+          <p className={panelHeaderDescriptionClass}>{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/members/transfers"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-input bg-card px-4 text-sm font-medium text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t('transfers')}
           </Link>
@@ -87,7 +98,9 @@ export default async function MembersPage({
         </div>
       </div>
 
-      <MembersTable rows={rows} total={total} query={query} dojos={dojoOptions} />
-    </div>
+      <div className="p-4">
+        <MembersTable rows={rows} total={total} query={query} dojos={dojoOptions} />
+      </div>
+    </section>
   );
 }

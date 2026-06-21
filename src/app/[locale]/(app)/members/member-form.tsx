@@ -55,7 +55,7 @@ type FormShape = {
  * Field-level styling: 44 px tall (iOS HIG) and 16 px font (prevents iOS zoom-on-focus).
  */
 const INPUT_CLASS =
-  'min-h-11 rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'min-h-11 rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export default function MemberForm({ mode, memberId, dojos, initial }: Props) {
   const t = useTranslations('members.form');
@@ -97,9 +97,7 @@ export default function MemberForm({ mode, memberId, dojos, initial }: Props) {
   useEffect(() => {
     const generatedKatakana = katakanaForFirstName(firstName);
     const value =
-      mode === 'edit' &&
-      firstName === initialFirstName.current &&
-      initialFirstNameKatakana.current
+      mode === 'edit' && firstName === initialFirstName.current && initialFirstNameKatakana.current
         ? initialFirstNameKatakana.current
         : generatedKatakana;
 
@@ -174,8 +172,7 @@ export default function MemberForm({ mode, memberId, dojos, initial }: Props) {
           className={cn(
             INPUT_CLASS,
             name === 'firstNameKatakana' && 'font-japanese',
-            extra.readOnly &&
-              'cursor-default border-periwinkle/50 bg-periwinkle/15 text-foreground',
+            extra.readOnly && 'cursor-default border-accent/35 bg-secondary/60 text-foreground',
           )}
         />
         {extra.description && (

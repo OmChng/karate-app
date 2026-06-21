@@ -80,7 +80,7 @@ function SidebarUserIdentity({
         {userInitials(name)}
       </div>
       <div className="min-w-0">
-        <p className="min-w-0 text-sm font-semibold text-white">
+        <p className="min-w-0 text-sm font-semibold text-sidebar-foreground">
           <SlidingOverflowText>{name}</SlidingOverflowText>
         </p>
         <p className="truncate text-xs text-muted-foreground">{t('activeSession')}</p>
@@ -206,11 +206,7 @@ function TextNavLink({
       aria-current={active ? 'page' : undefined}
     >
       <item.Icon
-        className={cn(
-          variant === 'desktop' ? 'h-4 w-4' : 'h-5 w-5',
-          'shrink-0',
-          active && 'text-primary',
-        )}
+        className={cn(variant === 'desktop' ? 'h-4 w-4' : 'h-5 w-5', 'shrink-0')}
         aria-hidden
       />
       <span className="min-w-0 truncate">{label}</span>
@@ -244,11 +240,7 @@ function FinanceTextSection({
         className={cn(buttonBase, active ? ACTIVE_LINK_CLASS : INACTIVE_LINK_CLASS)}
       >
         <Receipt
-          className={cn(
-            variant === 'desktop' ? 'h-4 w-4' : 'h-5 w-5',
-            'shrink-0',
-            active && 'text-primary',
-          )}
+          className={cn(variant === 'desktop' ? 'h-4 w-4' : 'h-5 w-5', 'shrink-0')}
           aria-hidden
         />
         <span className="min-w-0 truncate">{t('finances')}</span>
@@ -332,7 +324,7 @@ function FinanceRailSection() {
           active ? ACTIVE_RAIL_CLASS : INACTIVE_RAIL_CLASS,
         )}
       >
-        <Receipt className={cn('h-5 w-5', active && 'text-primary')} aria-hidden />
+        <Receipt className="h-5 w-5" aria-hidden />
       </button>
       {open && (
         <ul className="flex flex-col gap-1">
@@ -352,7 +344,7 @@ function FinanceRailSection() {
                     itemActive ? ACTIVE_RAIL_CLASS : INACTIVE_RAIL_CLASS,
                   )}
                 >
-                  <item.Icon className={cn('h-4 w-4', itemActive && 'text-primary')} aria-hidden />
+                  <item.Icon className="h-4 w-4" aria-hidden />
                 </Link>
               </li>
             );
@@ -386,7 +378,7 @@ function RailNavItems() {
                   active ? ACTIVE_RAIL_CLASS : INACTIVE_RAIL_CLASS,
                 )}
               >
-                <Icon className={cn('h-5 w-5', active && 'text-primary')} aria-hidden />
+                <Icon className="h-5 w-5" aria-hidden />
               </Link>
             </li>
           </Fragment>
