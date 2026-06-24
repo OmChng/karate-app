@@ -14,11 +14,11 @@
    (toggles, sorts, status changes) update the UI immediately.
 5. **Accessible by default**: every interactive control is keyboard-
    reachable, every form field is labeled, every async state is announced.
-6. **Spanish-only end-user UX**: the audience is Mexican. The product
-   never shows a language switcher to end users. English exists only as
-   a maintainer escape hatch via `/en/...` and is not advertised in the
-   UI. The HTML `lang` attribute is set from the route locale so screen
-   readers stay correct.
+6. **Public bilingual, management Spanish-only**: the public official
+   website may show Spanish and English. The login page and
+   authenticated management app remain Spanish-only. The public language
+   selector must not appear in the app shell, sidebar, bottom nav,
+   dashboard, forms, or protected workflows.
 
 ## 2. Visual language
 
@@ -77,8 +77,10 @@ sensei use:
 | `≥ lg` (1024 px+)            | Desktop and iPad Pro landscape                | Persistent full sidebar with icons + labels. Dense tables can replace card lists.                                                                           |
 
 - **Top bar**: hamburger (phones only), session info (left), sign-out
-  (right). The locale `<select>` is intentionally removed — Spanish is
-  the only customer-facing language.
+  (right). Do not add a language selector to the authenticated shell;
+  management workflows remain Spanish-only.
+- **Public website header/footer**: may expose a Spanish/English
+  selector for public marketing content only.
 - **Breadcrumbs**: shown on detail pages (v1.1).
 - **Bottom nav (`< md` only)**: 4 most-used destinations, fixed to
   `bottom-0 inset-x-0` with `pb-[env(safe-area-inset-bottom)]` so iOS

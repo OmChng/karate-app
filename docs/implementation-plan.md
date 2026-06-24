@@ -37,10 +37,11 @@ Cursor can execute it in a single session.
 - ✅ Auth.js v5 with Credentials provider (email-or-phone), Argon2id
   hashing, DB sessions.
 - ✅ RBAC helpers (`requireRole`, `withOrg`).
-- ✅ Application shell: top bar, sidebar, breadcrumb, theme + locale
-  providers, 404 + error boundaries.
-- ✅ i18n with `next-intl`, Spanish + English message files, locale
-  switcher.
+- ✅ Application shell: top bar, sidebar, breadcrumb, theme provider,
+  404 + error boundaries.
+- ✅ i18n with `next-intl`, Spanish + English message files, and a
+  public-website-only language selector. The authenticated management
+  shell remains Spanish-only.
 - ✅ Members module end-to-end (list + detail + create + edit) as the
   reference layout.
 - ✅ Vitest setup with sample unit tests (RBAC, phone/email

@@ -109,7 +109,8 @@ In scope for **v1.0**:
 - Announcements (in-app + email)
 - Basic dashboards (KPIs per role)
 - Reports: attendance % by member/class, revenue by dojo/month, promotion history
-- Spanish-MX primary, English secondary
+- Public website in Spanish and English; login and management app
+  Spanish-MX only
 - Cross-platform Docker dev setup
 - Self-host friendly (no vendor lock-in)
 
@@ -129,7 +130,8 @@ In scope for **v1.0**:
 
 ## 7. Non-goals (v1)
 
-- A public marketing site.
+- Self-service public signup or lead capture beyond the official public
+  website.
 - Built-in chat / DMs (Slack-style).
 - Video lesson hosting.
 - A native mobile app (PWA only).

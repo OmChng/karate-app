@@ -905,6 +905,80 @@
     transform-origin: left center;
   }
 
+  .dark .public-site .public-light-section {
+    background: #10131a;
+    color: #ffffff;
+  }
+
+  .dark .public-site .public-light-panel {
+    background: #171b24;
+    border-color: rgb(255 255 255 / 0.12);
+    color: #ffffff;
+  }
+
+  .dark .public-site .public-light-heading {
+    color: #ffffff;
+  }
+
+  .dark .public-site .public-light-copy {
+    color: rgb(255 255 255 / 0.7);
+  }
+
+  .dark .public-site .public-light-muted {
+    color: rgb(255 255 255 / 0.68);
+  }
+
+  .dark .public-site .public-light-subtle {
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .dark .public-site .public-light-divider {
+    border-color: rgb(255 255 255 / 0.12);
+  }
+
+  .dark .public-site .public-light-input {
+    background: #10131a;
+    border-color: rgb(255 255 255 / 0.14);
+    color: #ffffff;
+  }
+
+  .dark .public-site .public-light-input::placeholder {
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  .dark .public-site .public-light-button {
+    border-color: rgb(255 255 255 / 0.16);
+    color: #ffffff;
+  }
+
+  .dark .public-site .public-light-button:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  .dark .public-site .public-light-accent-panel {
+    background: #2a1716;
+    color: #fecaca;
+  }
+
+  .dark .public-site .public-light-error-panel {
+    background: rgb(127 29 29 / 0.4);
+    border-color: rgb(248 113 113 / 0.25);
+    color: #fecaca;
+  }
+
+  .public-site :where([data-public-motion]) {
+    transition-property: background-color, border-color, box-shadow, color;
+    will-change: opacity, transform, filter;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .public-site :where([data-public-motion]) {
+      transform: none !important;
+      filter: none !important;
+      will-change: auto;
+    }
+  }
+
   .page-transition {
     --page-enter-y: var(--motion-y-page);
     --page-exit-y: calc(var(--motion-y-medium) * -1);

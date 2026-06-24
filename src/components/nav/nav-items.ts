@@ -38,7 +38,7 @@ export type NavKey =
   | 'settings';
 
 export type NavHref =
-  | '/'
+  | '/app'
   | '/instructors'
   | '/members'
   | '/clients'
@@ -68,7 +68,7 @@ export interface NavItem {
 }
 
 export const PRIMARY_NAV: NavItem[] = [
-  { href: '/', key: 'dashboard', Icon: LayoutDashboard },
+  { href: '/app', key: 'dashboard', Icon: LayoutDashboard },
   { href: '/instructors', key: 'staff', Icon: Trophy },
   { href: '/members', key: 'members', Icon: Users },
   { href: '/clients', key: 'clients', Icon: Users },
@@ -95,15 +95,15 @@ export const FINANCE_NAV: NavItem[] = [
  * Keep this list short — bottom nav is for the most-used routes only.
  */
 export const BOTTOM_NAV: NavItem[] = [
-  { href: '/', key: 'dashboard', Icon: LayoutDashboard },
+  { href: '/app', key: 'dashboard', Icon: LayoutDashboard },
   { href: '/members', key: 'members', Icon: Users },
   { href: '/classes', key: 'classes', Icon: Calendar },
   { href: '/instructors', key: 'staff', Icon: Trophy },
 ];
 
 export function isActive(pathname: string, href: NavHref): boolean {
-  if (href === '/') return pathname === '/' || pathname === '' || /^\/(?:en|es)\/?$/.test(pathname);
   // strip leading locale segment for comparison
   const stripped = pathname.replace(/^\/(?:en|es)(?=\/|$)/, '') || '/';
+  if (href === '/app') return stripped === '/app';
   return stripped === href || stripped.startsWith(href + '/');
 }

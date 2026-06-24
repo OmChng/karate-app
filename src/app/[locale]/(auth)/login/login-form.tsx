@@ -36,7 +36,7 @@ export default function LoginForm({ next, error }: { next?: string; error?: stri
       setErrorMessage(t('invalidCredentials'));
       return;
     }
-    router.push(next && next.startsWith('/') ? (next as never) : '/');
+    router.push(next && next.startsWith('/') ? (next as never) : '/app');
     router.refresh();
   }
 

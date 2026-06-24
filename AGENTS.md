@@ -5,20 +5,25 @@ Instructions every AI agent and contributor must follow when working on
 
 ## Hard rules — do not violate without explicit owner approval
 
-1. **The customer-facing UI is Spanish (`es`) only.**
-   - The audience is Mexican. Spanish is the only language an end user
-     should ever see, on any device.
-   - The `en` locale is a maintainer escape hatch for QA; never link to
-     it from product UI and never re-introduce a customer-facing
-     language switcher.
+1. **The management app is Spanish (`es`) only; the public website may
+   be Spanish or English.**
+   - The audience is Mexican. The login page, authenticated management
+     routes, app shell, sidebar, bottom nav, dashboards, forms, and
+     protected workflows must remain Spanish-only.
+   - The public official website may expose a Spanish/English selector
+     and may render public marketing content in `/en`.
+   - Never add a language selector to the login page or authenticated
+     management UI.
    - `src/i18n/routing.ts` sets `defaultLocale: 'es'` with
      `localeDetection: false`. Do not flip these.
-   - All user-visible strings come from `messages/es.json` via
-     `useTranslations()` / `getTranslations()` — never JSX literals.
+   - Public website strings come from `messages/es.json` and
+     `messages/en.json`; management strings come from `messages/es.json`
+     via `useTranslations()` / `getTranslations()` — never JSX
+     literals.
    - Full details and the verification checklist:
      [`context/language-and-locale.md`](context/language-and-locale.md).
    - The chat conversation may happen in English. **Do not infer
-     product UI language from the chat language.**
+     management UI language from the chat language.**
 
 2. **The product must work flawlessly on phone, tablet, and desktop —
    with tablet (iPad portrait, 768–834 px) as the primary teacher

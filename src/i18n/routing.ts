@@ -2,14 +2,14 @@ import { defineRouting } from 'next-intl/routing';
 import { createNavigation } from 'next-intl/navigation';
 
 /**
- * Spanish-only end-user UX. The audience is Mexican.
+ * Public website: Spanish and English. Management app: Spanish-only.
  *
  * - `defaultLocale: 'es'` means `/...` (no prefix) renders Spanish.
  * - `localeDetection: false` disables browser `Accept-Language` sniffing,
  *   so an English-speaking developer's browser does NOT silently route
- *   the customer to `/en/...`. English remains accessible only via an
- *   explicit `/en/...` URL — a maintainer escape hatch, not a public
- *   feature. Do not remove this flag without product approval.
+ *   the customer to `/en/...`.
+ * - `/en` is public-site only. Middleware keeps login and protected
+ *   management routes on Spanish URLs.
  */
 export const routing = defineRouting({
   locales: ['es', 'en'],
@@ -18,6 +18,7 @@ export const routing = defineRouting({
   localeDetection: false,
   pathnames: {
     '/': '/',
+    '/app': '/app',
     '/login': {
       es: '/iniciar-sesion',
       en: '/login',

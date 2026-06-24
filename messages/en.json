@@ -3,6 +3,322 @@
     "name": "GOJU-KAN / Sensei",
     "tagline": "Administrative platform for karate organizations"
   },
+  "publicHome": {
+    "metadata": {
+      "title": "Karate, discipline, and community",
+      "description": "Official site for Mexican karate academies with martial formation, programs, news, and access to the management system."
+    },
+    "brand": {
+      "name": "GOJU-KAN / Sensei",
+      "tagline": "Karate for Mexico",
+      "homeLabel": "Go to the official site home"
+    },
+    "nav": {
+      "primaryLabel": "Official site navigation",
+      "about": "About us",
+      "academies": "Academies",
+      "programs": "Programs",
+      "news": "News",
+      "contact": "Contact"
+    },
+    "actions": {
+      "academies": "Explore our academies",
+      "login": "Enter the system"
+    },
+    "language": {
+      "label": "Language selector",
+      "es": "Español",
+      "en": "English"
+    },
+    "hero": {
+      "eyebrow": "Official site",
+      "title": "Martial formation with discipline, community, and excellence",
+      "subtitle": "We support Mexican karate academies with a clear experience for families, students, instructors, and administrators.",
+      "visualAlt": "Visual composition of karate and dojo life",
+      "visualKicker": "Dojo spirit",
+      "visualTitle": "Training with purpose",
+      "visualText": "A space to present academies, programs, and news without interfering with daily system operations.",
+      "stats": {
+        "academies": {
+          "label": "Academies",
+          "value": "Dojo network"
+        },
+        "families": {
+          "label": "Community",
+          "value": "Families and students"
+        },
+        "formation": {
+          "label": "Focus",
+          "value": "Continuous discipline"
+        }
+      }
+    },
+    "story": {
+      "eyebrow": "Martial formation",
+      "title": "A practice built step by step.",
+      "body": "Each class supports a clear progression: attention, character, and technique at every student's pace.",
+      "beats": {
+        "discipline": {
+          "title": "Discipline",
+          "body": "Consistency gives training structure and turns each session into a chance to improve."
+        },
+        "community": {
+          "title": "Community",
+          "body": "Families, students, and senseis share a close, respectful, and focused environment."
+        },
+        "excellence": {
+          "title": "Excellence",
+          "body": "Technique is refined with care so students progress with safety and purpose inside the dojo."
+        }
+      }
+    },
+    "about": {
+      "eyebrow": "About us",
+      "title": "Karate with structure, respect, and personal growth",
+      "body": "Sensei Modern presents a karate organization focused on integral formation: technique, character, consistency, and community within each dojo.",
+      "supporting": "The public site opens the door to families, students, and visitors; the private system remains reserved for senseis and administrators.",
+      "values": {
+        "discipline": {
+          "title": "Discipline",
+          "body": "Consistent training, clear habits, and responsible tracking of martial development."
+        },
+        "community": {
+          "title": "Community",
+          "body": "Dojos that bring students, families, and instructors together in a close and respectful environment."
+        },
+        "growth": {
+          "title": "Growth",
+          "body": "Programs designed for safe progress from first classes to advanced ranks."
+        }
+      }
+    },
+    "academies": {
+      "eyebrow": "Our academies",
+      "title": "Find your nearest Goju-Kan academy",
+      "body": "Review the branches published by Goju-Kan, search by address or ZIP code, and open the route in Google Maps.",
+      "phoneLabel": "Phone {phone}",
+      "whatsappLabel": "WhatsApp {phone}",
+      "directions": "Get directions",
+      "directionsFromOrigin": "Route from my location",
+      "directionsAria": "Open Google Maps directions to {academy}",
+      "locator": {
+        "label": "Your address or ZIP code",
+        "placeholder": "E.g. 45030, Providencia, or Av. Guadalupe",
+        "submit": "Find academy",
+        "searching": "Searching…",
+        "useCurrentLocation": "Use my location",
+        "emptyError": "Enter an address or ZIP code to calculate the closest academy.",
+        "notFoundError": "We could not locate that address. Try a street, neighborhood, or Mexican ZIP code.",
+        "geolocationUnavailable": "Your browser cannot use automatic location. Enter an address or ZIP code.",
+        "geolocationError": "We could not get your location. Check browser permissions or type your address.",
+        "resultTitle": "The closest academy is {academy}.",
+        "nearestBadge": "Closest",
+        "mainBadge": "Headquarters"
+      },
+      "items": {
+        "bosquesSantaAnita": {
+          "area": "Jalisco",
+          "name": "Bosques de Santa Anita",
+          "address": "Boulevard Bosques de Santa Anita 2355-28, San Agustín, 45643 Tlajomulco de Zúñiga, Jal."
+        },
+        "bugambilias": {
+          "area": "Zapopan",
+          "name": "Bugambilias",
+          "address": "Av. Lorenzo Barcelata 513 Int. 4, Valle de Bugambilias, 45237 Zapopan, Jal."
+        },
+        "casaFuerte": {
+          "area": "Jalisco",
+          "name": "Casa Fuerte",
+          "address": "Av. López Mateos Sur S/N, Casa Fuerte, Lomas de San Agustín, 45646 Tlajomulco de Zúñiga, Jal."
+        },
+        "elBriseno": {
+          "area": "Jalisco",
+          "name": "El Briseño",
+          "address": "Av. López Portillo 78, El Briseño, 45236 Zapopan, Jal."
+        },
+        "elCampestre": {
+          "area": "Jalisco",
+          "name": "El Campestre",
+          "address": "Av. de la Huerta 634, La Venta del Astillero, 45221 Zapopan, Jal."
+        },
+        "elColli": {
+          "area": "Jalisco",
+          "name": "El Colli",
+          "address": "Av. Nicolás Copérnico 1652 Local C, Colli Primavera, 45057 Zapopan, Jal."
+        },
+        "elFresno": {
+          "area": "Guadalajara",
+          "name": "El Fresno",
+          "address": "Calle Durazno 1439, Col. del Fresno, 44900 Guadalajara, Jal."
+        },
+        "independencia": {
+          "area": "Guadalajara",
+          "name": "Independencia",
+          "address": "Calle Monte Jura 58, Villas de San Juan, 44379 Guadalajara, Jal."
+        },
+        "jardinesDelValle": {
+          "area": "Zapopan",
+          "name": "Jardines del Valle",
+          "address": "Calz. Federalistas 1413-A, Jardines del Valle, 45138 Zapopan, Jal."
+        },
+        "laEstancia": {
+          "area": "Zapopan",
+          "name": "La Estancia",
+          "address": "Av. Miguel Ángel 68, Real Vallarta, 45030 Zapopan, Jal."
+        },
+        "lasAguilas": {
+          "area": "Zapopan",
+          "name": "Las Águilas",
+          "address": "Av. Sierra de Mazamitla 5733, Pinar de la Calma, 45080 Zapopan, Jal."
+        },
+        "lasCanadas": {
+          "area": "Jalisco",
+          "name": "Las Cañadas",
+          "address": "Av. Paseo de las Aves 2665, Canteras del Centinela, 45132 Zapopan, Jal."
+        },
+        "lomasUniversidad": {
+          "area": "Zapopan",
+          "name": "Lomas Universidad",
+          "address": "Calle Toulouse Lautrec 210, Lomas Universidad, 45029 Zapopan, Jal."
+        },
+        "metropark": {
+          "area": "Zapopan",
+          "name": "Metropark",
+          "address": "Av. Guadalupe 6818, Residencial Plaza Guadalupe, 45053 Zapopan, Jal."
+        },
+        "miramar": {
+          "area": "Zapopan",
+          "name": "Miramar",
+          "address": "Calle Bahía Madre Perla 3573, Miramar, 45060 Zapopan, Jal."
+        },
+        "nuevaGalicia": {
+          "area": "Jalisco",
+          "name": "Nueva Galicia",
+          "address": "Av. Valle del Silicio 2 Local 18, La Tijera, 45051 Tlajomulco de Zúñiga, Jal."
+        },
+        "olivos": {
+          "area": "Tlaquepaque",
+          "name": "Olivos",
+          "address": "Plaza Los Olivos, Av. 8 de Julio 751 Local 2A, Col. Los Olivos, 45601 San Pedro Tlaquepaque, Jal."
+        },
+        "otero": {
+          "area": "Zapopan",
+          "name": "Otero",
+          "address": "Av. Mariano Otero 2436, Plaza Otero Local 3, Valle de San Nicolás, 45067 Zapopan, Jal."
+        },
+        "sanAgustin": {
+          "area": "Tlajomulco de Zúñiga",
+          "name": "San Agustín",
+          "address": "José María Morelos 115-B, Colonia San Agustín, 45645 Tlajomulco de Zúñiga, Jal."
+        },
+        "santaFe": {
+          "area": "Tlajomulco de Zúñiga",
+          "name": "Santa Fé",
+          "address": "Blvrd. Sta. Fe 100H, Hacienda Santa Fe, Plaza CFE, 45655 Tlajomulco de Zúñiga, Jal."
+        },
+        "tesistan": {
+          "area": "Zapopan",
+          "name": "Tesistán",
+          "address": "Av. San Mateo 1178-5, Tesistán, 45200 Zapopan, Jal."
+        },
+        "valdepenas": {
+          "area": "Zapopan",
+          "name": "Valdepeñas",
+          "address": "Av. Valdepeñas 3636-B, Rinconada del Camichín, 45133 Zapopan, Jal."
+        },
+        "valleImperial": {
+          "area": "Zapopan",
+          "name": "Valle Imperial",
+          "address": "Plaza Imperial, Bv. Valle Imperial 260 Local 17 E, Valles de Nuevo México, 45134 Zapopan, Jal."
+        },
+        "valleReal": {
+          "area": "Zapopan",
+          "name": "Valle Real",
+          "address": "Av. Santa Margarita 4386, Col. Jardín Real, 45210 Zapopan, Jal."
+        }
+      }
+    },
+    "programs": {
+      "eyebrow": "Programs",
+      "title": "Training paths for every stage",
+      "body": "Programs communicate the public offering without promising automatic registration or unavailable management features.",
+      "items": {
+        "children": {
+          "title": "Children's karate",
+          "body": "Classes to develop coordination, respect, attention, and confidence from early ages."
+        },
+        "youthAdults": {
+          "title": "Youth and adults",
+          "body": "Technical and physical training for students seeking discipline, self-defense, and martial progress."
+        },
+        "ranks": {
+          "title": "Rank preparation",
+          "body": "Structured support to evaluate progress, strengthen fundamentals, and arrive ready for each exam."
+        },
+        "seminars": {
+          "title": "Seminars and events",
+          "body": "Special activities for fellowship, technical updates, and community growth."
+        }
+      }
+    },
+    "instructors": {
+      "eyebrow": "Instructors",
+      "title": "Close leadership on and off the tatami",
+      "body": "Public profiles stay high-level until there is an official source for bios, ranks, and photography.",
+      "items": {
+        "chief": {
+          "role": "Technical direction",
+          "name": "Chief sensei",
+          "body": "Guides the training line, respect culture, and martial progression of the academies."
+        },
+        "formation": {
+          "role": "Formation",
+          "name": "Instructor team",
+          "body": "Supports regular classes, rank preparation, and student follow-up by stage."
+        },
+        "operations": {
+          "role": "Coordination",
+          "name": "Dojo leadership",
+          "body": "Maintains communication with families and keeps each location operating in an orderly way."
+        }
+      }
+    },
+    "news": {
+      "eyebrow": "Recent news",
+      "title": "Community activity",
+      "body": "Public preview with static content until a news module is ready to publish.",
+      "previewLabel": "Preview",
+      "items": {
+        "grading": {
+          "date": "Rank calendar",
+          "title": "Preparation for upcoming evaluations",
+          "body": "The community organizes to review fundamentals, attendance, and goals before exams."
+        },
+        "seminar": {
+          "date": "Technical seminar",
+          "title": "Special training for instructors",
+          "body": "Sessions focused on technical criteria, class methodology, and student support."
+        },
+        "community": {
+          "date": "Dojo life",
+          "title": "Families, students, and senseis in one community",
+          "body": "The public site helps communicate important activities without exposing the management system."
+        }
+      }
+    },
+    "contact": {
+      "eyebrow": "Contact",
+      "title": "Visit an academy or enter the system if you already belong to the organization",
+      "body": "This site guides visitors and keeps private access available for existing users.",
+      "academyCta": "View academies",
+      "academyAria": "Go to the academies section",
+      "loginCta": "Enter the system"
+    },
+    "footer": {
+      "navLabel": "Official site links",
+      "copyright": "© {year} Karate organization. Public site in Spanish."
+    }
+  },
   "nav": {
     "dashboard": "Home",
     "finances": "Finance",
@@ -359,7 +675,8 @@
     "retry": "Retry",
     "notFound": "Not found",
     "notFoundDescription": "We couldn't find what you were looking for.",
-    "goHome": "Go to dashboard",
+    "goHome": "Go home",
+    "goDashboard": "Go to system",
     "comingSoon": "Coming soon.",
     "skipToContent": "Skip to content",
     "noOrganizationContext": "No organization is selected."

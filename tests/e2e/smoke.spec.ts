@@ -6,7 +6,7 @@ const admin = {
 };
 
 const primaryRoutes = [
-  { href: '/', heading: 'Inicio', link: 'Inicio' },
+  { href: '/app', heading: 'Inicio', link: 'Inicio' },
   { href: '/personal', heading: 'Staff', link: 'Staff' },
   { href: '/personal/nuevo', heading: 'Agregar staff' },
   { href: '/personal/demo', heading: 'Detalle de staff' },
@@ -73,6 +73,7 @@ async function signInAsAdmin(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Inicio' })).toBeVisible({
     timeout: 15_000,
   });
+  await expect(page).toHaveURL('/app');
 }
 
 async function getMemberHrefByCode(page: Page, code: string) {
@@ -133,6 +134,189 @@ async function cssToken(page: Page, name: string) {
 test.describe('Smoke', () => {
   test.describe.configure({ mode: 'serial' });
 
+  test('public homepage supports Spanish and English routing', async ({ page }) => {
+    await expectDocumentOk(page, '/');
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Formación marcial con disciplina, comunidad y excelencia',
+      }),
+    ).toBeVisible();
+
+    await expectDocumentOk(page, '/es');
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Formación marcial con disciplina, comunidad y excelencia',
+      }),
+    ).toBeVisible();
+
+    await expectDocumentOk(page, '/en');
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Martial formation with discipline, community, and excellence',
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Official site navigation' })).toBeVisible();
+  });
+
+  test('public language selector switches only the public homepage locale', async ({ page }) => {
+    await expectDocumentOk(page, '/es');
+
+    const spanishNav = page.getByRole('navigation', { name: 'Navegación del sitio oficial' });
+    const spanishSwitcher = spanishNav.getByRole('group', { name: 'Selector de idioma' });
+    await expect(spanishSwitcher).toBeVisible();
+    await expect(spanishSwitcher.getByRole('link', { name: 'Español' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    await spanishSwitcher.getByRole('link', { name: 'English' }).click();
+    await expect(page).toHaveURL('/en');
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Martial formation with discipline, community, and excellence',
+      }),
+    ).toBeVisible();
+
+    const englishNav = page.getByRole('navigation', { name: 'Official site navigation' });
+    const englishSwitcher = englishNav.getByRole('group', { name: 'Language selector' });
+    await expect(englishSwitcher).toBeVisible();
+    await expect(englishSwitcher.getByRole('link', { name: 'English' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    await englishSwitcher.getByRole('link', { name: 'Español' }).click();
+    await expect(page).toHaveURL('/');
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Formación marcial con disciplina, comunidad y excelencia',
+      }),
+    ).toBeVisible();
+  });
+
+  test('public homepage renders unauthenticated and links to canonical login', async ({ page }) => {
+    const runtimeErrors = collectRuntimeErrors(page);
+
+    await expectDocumentOk(page, '/es');
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Formación marcial con disciplina, comunidad y excelencia',
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Quiénes somos' }).first()).toBeVisible();
+    const publicNav = page.getByRole('navigation', { name: 'Navegación del sitio oficial' });
+    const themeButton = page.getByRole('button', { name: /Cambiar a modo (oscuro|claro)/ });
+    await expect(themeButton).toBeVisible();
+    await expect(publicNav.getByRole('link', { name: 'Contacto' })).toBeVisible();
+    await expect(publicNav.getByRole('link', { name: 'Ingresar al sistema' })).toBeVisible();
+    await expect
+      .poll(() =>
+        publicNav.evaluate((nav) =>
+          Array.from(nav.children).map((child) => {
+            if (child.getAttribute('role') === 'group') {
+              return Array.from(child.querySelectorAll('a'))
+                .map((link) => link.textContent?.trim() ?? '')
+                .join('/');
+            }
+            return child.textContent?.trim() ?? '';
+          }),
+        ),
+      )
+      .toEqual([
+        'Quiénes somos',
+        'Academias',
+        'Programas',
+        'Noticias',
+        'Contacto',
+        'Español/English',
+        'Cambiar a modo oscuro',
+        'Ingresar al sistema',
+      ]);
+    await expect(page.getByLabel('Tu dirección o código postal')).toBeVisible();
+    const firstAcademyCard = page.locator('#academias article').first();
+    await expect(
+      firstAcademyCard.getByRole('heading', { level: 3, name: 'Las Águilas' }),
+    ).toBeVisible();
+    await expect(firstAcademyCard.getByText('Matriz')).toBeVisible();
+    await expect(
+      firstAcademyCard.getByText('Av. Sierra de Mazamitla 5733, Pinar de la Calma'),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 3, name: 'Bosques de Santa Anita' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Boulevard Bosques de Santa Anita 2355-28, San Agustín'),
+    ).toBeVisible();
+    await expect(page.getByText('Karate infantil')).toBeVisible();
+    await expect(page.locator('html')).not.toHaveClass(/dark/);
+    await expect
+      .poll(() =>
+        page.locator('.public-site').evaluate((node) => {
+          return window.getComputedStyle(node).backgroundColor;
+        }),
+      )
+      .toBe('rgb(11, 15, 20)');
+    await expect
+      .poll(() =>
+        page
+          .locator('#main > section')
+          .first()
+          .evaluate((node) => {
+            return window.getComputedStyle(node).backgroundColor;
+          }),
+      )
+      .toBe('rgb(11, 15, 20)');
+    await expect
+      .poll(() =>
+        page.locator('#quienes-somos').evaluate((node) => {
+          return window.getComputedStyle(node).backgroundColor;
+        }),
+      )
+      .toBe('rgb(247, 248, 250)');
+    await expect
+      .poll(() =>
+        page.locator('#programas').evaluate((node) => {
+          return window.getComputedStyle(node).backgroundColor;
+        }),
+      )
+      .toBe('rgb(16, 19, 26)');
+
+    await page.waitForLoadState('networkidle');
+    await themeButton.click();
+    await expect(themeButton).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect
+      .poll(() =>
+        page.locator('#quienes-somos').evaluate((node) => {
+          return window.getComputedStyle(node).backgroundColor;
+        }),
+      )
+      .toBe('rgb(16, 19, 26)');
+    await expect
+      .poll(() =>
+        page
+          .locator('#quienes-somos article')
+          .first()
+          .evaluate((node) => {
+            return window.getComputedStyle(node).backgroundColor;
+          }),
+      )
+      .toBe('rgb(23, 27, 36)');
+
+    await page.getByRole('link', { name: 'Ingresar al sistema' }).first().click();
+    await expect(page).toHaveURL(/\/iniciar-sesion$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
+
+    expect(runtimeErrors).toEqual([]);
+  });
+
   test('login page renders and invalid login fails safely', async ({ page }) => {
     const runtimeErrors = collectRuntimeErrors(page);
 
@@ -141,6 +325,7 @@ test.describe('Smoke', () => {
     await expect(page.locator('html')).not.toHaveClass(/dark/);
     await expect(page.locator('.brand-mark')).toBeVisible();
     await expect(page.locator('.palette-rule')).toHaveCount(0);
+    await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
     await expect(page.getByLabel('Email o teléfono')).toBeVisible();
     await expect(page.getByLabel('Contraseña')).toBeVisible();
 
@@ -153,14 +338,44 @@ test.describe('Smoke', () => {
     await page.getByRole('button', { name: 'Entrar' }).click();
     await expect(page.getByText('Credenciales inválidas')).toBeVisible({ timeout: 15_000 });
 
+    const englishLoginResponse = await page.goto('/en/login');
+    expect(englishLoginResponse?.status()).toBeLessThan(400);
+    await expect(page).toHaveURL(/\/iniciar-sesion$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
+
     expect(runtimeErrors).toEqual([]);
   });
 
   test('protected route redirects unauthenticated users to login', async ({ page }) => {
+    const appResponse = await page.goto('/app');
+    expect(appResponse?.status()).toBeLessThan(400);
+    await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fapp$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+
+    const englishAppResponse = await page.goto('/en/app');
+    expect(englishAppResponse?.status()).toBeLessThan(400);
+    await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fapp$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+
+    const englishMembersResponse = await page.goto('/en/members');
+    expect(englishMembersResponse?.status()).toBeLessThan(400);
+    await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fmiembros$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+
     const response = await page.goto('/miembros');
     expect(response?.status()).toBeLessThan(400);
     await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fmiembros$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+  });
+
+  test('valid login redirects authenticated users to the management app', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Valid login redirect runs once on desktop.');
+
+    await signInAsAdmin(page);
+    await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
   });
 
   test('theme toggle switches modes and persists after reload', async ({ page }, testInfo) => {

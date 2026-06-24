@@ -24,10 +24,11 @@ export const viewport: Viewport = {
 
 /**
  * Next.js 15 requires the root layout to render `<html>` and `<body>`.
- * The default locale is hardcoded here because the product is Spanish-only
- * for end users (see `context/language-and-locale.md`). The `/en/...`
- * maintainer escape hatch updates `document.documentElement.lang`
- * client-side via `HtmlLangSetter` in `[locale]/layout.tsx`.
+ * The default locale is hardcoded here because Spanish remains the
+ * default and the management app is Spanish-only (see
+ * `context/language-and-locale.md`). Public `/en` routes update
+ * `document.documentElement.lang` client-side via `HtmlLangSetter` in
+ * `[locale]/layout.tsx`.
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

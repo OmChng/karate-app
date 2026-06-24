@@ -13,9 +13,11 @@ UX, and the foundation for future features.
 **Mexican karate organizations.** Sensei (teachers), org admins, and
 parents/guardians.
 
-**The product UI is in Spanish (`es`) only.** This is non-negotiable.
-The chat with the development AI may be in English; the product is
-not. See [`AGENTS.md`](AGENTS.md) and
+**The management product UI is Spanish (`es`) only.** The public
+official website may be shown in Spanish or English, but the login page
+and authenticated management app remain Spanish-only. The chat with the
+development AI may be in English; do not infer product UI language from
+the chat language. See [`AGENTS.md`](AGENTS.md) and
 [`context/language-and-locale.md`](context/language-and-locale.md).
 
 ## Primary devices

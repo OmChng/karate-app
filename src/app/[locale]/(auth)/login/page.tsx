@@ -25,7 +25,7 @@ export default async function LoginPage({
     const safeNext =
       search.next && search.next.startsWith('/') && !search.next.startsWith('//')
         ? search.next
-        : '/';
+        : '/app';
     redirect({ href: safeNext as never, locale });
   }
 

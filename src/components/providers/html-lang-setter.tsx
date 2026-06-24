@@ -6,10 +6,10 @@ import { useEffect } from 'react';
  * Syncs `<html lang>` with the current route locale.
  *
  * The root `app/layout.tsx` hardcodes `<html lang="es">` because Spanish
- * is the only customer-facing language (see
- * `context/language-and-locale.md`). For the rare `/en/...` maintainer
- * route, this component updates `document.documentElement.lang`
- * after hydration so screen readers report the correct language.
+ * remains the default locale and the management app is Spanish-only (see
+ * `context/language-and-locale.md`). For the public `/en` route, this
+ * component updates `document.documentElement.lang` after hydration so
+ * screen readers report the correct language.
  *
  * `<html>` carries `suppressHydrationWarning` in the root layout, which
  * is what allows this client-side mutation without a hydration mismatch.

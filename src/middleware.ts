@@ -5,6 +5,8 @@ import { routing } from '@/i18n/routing';
 const intlMiddleware = createIntlMiddleware(routing);
 
 const SPANISH_CANONICAL_ROUTES: Array<[RegExp, (match: RegExpMatchArray) => string]> = [
+  [/^\/es\/login\/?$/, () => '/iniciar-sesion'],
+  [/^\/es\/iniciar-sesion\/?$/, () => '/iniciar-sesion'],
   [/^\/login\/?$/, () => '/iniciar-sesion'],
   [/^\/instructors\/?$/, () => '/personal'],
   [/^\/instructors\/new\/?$/, () => '/personal/nuevo'],
@@ -37,13 +39,36 @@ const SPANISH_CANONICAL_ROUTES: Array<[RegExp, (match: RegExpMatchArray) => stri
 ];
 
 const PUBLIC_PATTERNS = [
+  /^\/(?:es|en)?\/?$/,
   /^\/(?:es\/)?iniciar-sesion\/?$/,
-  /^\/(?:es|en)?\/?login\/?$/,
+  /^\/(?:es\/)?login\/?$/,
   /^\/(?:es|en)?\/?forgot-password\/?$/,
   /^\/api\/auth(?:\/.*)?$/,
   /^\/_next\//,
   /^\/favicon\.ico$/,
 ];
+
+function redirectToPath(req: NextRequest, pathname: string, status = 308) {
+  const url = req.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.redirect(url, status);
+}
+
+function spanishPathForEnglishLocalePath(pathname: string) {
+  if (!pathname.startsWith('/en/')) return null;
+
+  const unprefixedPathname = pathname.replace(/^\/en(?=\/)/, '') || '/';
+  if (unprefixedPathname === '/') return null;
+  if (/^\/iniciar-sesion\/?$/.test(unprefixedPathname)) return '/iniciar-sesion';
+
+  const canonicalRoute = SPANISH_CANONICAL_ROUTES.find(([pattern]) =>
+    pattern.test(unprefixedPathname),
+  );
+  if (!canonicalRoute) return unprefixedPathname;
+
+  const [pattern, toPathname] = canonicalRoute;
+  return toPathname(unprefixedPathname.match(pattern)!);
+}
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -53,12 +78,15 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  const spanishPath = spanishPathForEnglishLocalePath(pathname);
+  if (spanishPath) {
+    return redirectToPath(req, spanishPath);
+  }
+
   const canonicalRoute = SPANISH_CANONICAL_ROUTES.find(([pattern]) => pattern.test(pathname));
   if (canonicalRoute) {
     const [pattern, toPathname] = canonicalRoute;
-    const url = req.nextUrl.clone();
-    url.pathname = toPathname(pathname.match(pattern)!);
-    return NextResponse.redirect(url, 308);
+    return redirectToPath(req, toPathname(pathname.match(pattern)!));
   }
 
   if (PUBLIC_PATTERNS.some((re) => re.test(pathname))) {
@@ -70,7 +98,7 @@ export function middleware(req: NextRequest) {
 
   if (!sessionCookie) {
     const url = req.nextUrl.clone();
-    url.pathname = pathname.startsWith('/en') ? '/en/login' : '/iniciar-sesion';
+    url.pathname = '/iniciar-sesion';
     url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);
   }

@@ -233,5 +233,7 @@ interface Storage {
   copies its structure (`page.tsx` list + `[id]/page.tsx` detail +
   `actions.ts` server actions + `schemas.ts` zod + `queries.ts` Drizzle
   queries + tests).
-- i18n keys are namespaced per module (`members.list.title`) so adding a
-  third locale never requires touching unrelated code.
+- i18n keys are namespaced per module (`members.list.title`). The
+  public website may render Spanish or English; login and protected
+  management routes remain Spanish-only even though message files exist
+  for maintainer QA.
