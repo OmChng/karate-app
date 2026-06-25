@@ -345,6 +345,9 @@ Beyond per-table indexes called out above:
 - Generated via `drizzle-kit generate` from the TS schema.
 - Applied via `scripts/migrate.ts` (which uses `drizzle-orm/postgres-js/migrator`).
 - Migrations are committed to `drizzle/` and reviewed in PRs.
+- First-time setup applies committed migrations with `pnpm db:migrate`;
+  do not run `pnpm db:generate` unless you intentionally changed
+  `src/db/schema/` and are creating a new reviewed migration.
 - Down-migrations are intentionally not generated; we forward-fix.
 
 ## 6. Seed strategy

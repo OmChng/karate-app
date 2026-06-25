@@ -20,7 +20,7 @@ next-intl. Cross-platform via Docker Compose.
 | Docker Desktop | latest                     | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) | same                                                                              | Docker Engine + Compose plugin |
 | Git            | any                        | `brew install git`                                                                    | [git-scm.com](https://git-scm.com/)                                               | distro package                 |
 
-## Quick start (macOS)
+## Quick start (macOS / Linux / Codespaces)
 
 ```bash
 # 1) Enable pnpm
@@ -31,13 +31,12 @@ pnpm install
 
 # 3) Set up local env (real values stay in .env.local; .env.local is gitignored)
 cp .env.example .env.local
-# Open .env.local and set AUTH_SECRET to: $(openssl rand -base64 32)
+AUTH_SECRET="$(openssl rand -base64 32)" perl -0pi -e 's|^AUTH_SECRET=.*|AUTH_SECRET=$ENV{AUTH_SECRET}|m' .env.local
 
 # 4) Start Postgres + Mailhog
 pnpm db:up
 
-# 5) Generate + apply migrations
-pnpm db:generate     # creates SQL under ./drizzle
+# 5) Apply committed migrations
 pnpm db:migrate
 
 # 6) Seed demo data
@@ -63,14 +62,13 @@ pnpm install
 
 # 3) Set up local env
 Copy-Item .env.example .env.local
-# Edit .env.local; AUTH_SECRET can be generated with:
-[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+$secret = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+(Get-Content .env.local) -replace '^AUTH_SECRET=.*', "AUTH_SECRET=$secret" | Set-Content .env.local
 
 # 4) Start Postgres + Mailhog (Docker Desktop must be running)
 pnpm db:up
 
 # 5) Migrate + seed
-pnpm db:generate
 pnpm db:migrate
 pnpm db:seed
 
@@ -88,32 +86,32 @@ To run the app inside Docker (production-style):
 ```bash
 cp .env.example .env.local
 # Set AUTH_SECRET in .env.local first.
-docker compose --profile full up --build
+docker compose --env-file .env.local --profile full up --build
 # App: http://localhost:3000
 # Mailhog UI: http://localhost:8025
 ```
 
 ## Common scripts
 
-| Command                      | What it does                                          |
-| ---------------------------- | ----------------------------------------------------- |
-| `pnpm dev`                   | Run the app at http://localhost:3000                  |
-| `pnpm build`                 | Production build                                      |
-| `pnpm start`                 | Run the built app                                     |
-| `pnpm lint`                  | ESLint flat config                                    |
-| `pnpm typecheck`             | TypeScript strict check                               |
-| `pnpm format`                | Prettier write                                        |
-| `pnpm test`                  | Vitest unit tests                                     |
-| `pnpm e2e:install`           | Install Playwright browsers (one-time)                |
-| `pnpm e2e`                   | Playwright end-to-end (boots `pnpm dev` if needed)    |
-| `pnpm db:up`                 | Start Postgres + Mailhog containers                   |
-| `pnpm db:down`               | Stop containers                                       |
-| `pnpm db:generate`           | Generate SQL migrations from the Drizzle schema       |
-| `pnpm db:migrate`            | Apply pending migrations                              |
-| `pnpm db:push`               | Push schema directly (dev shortcut, **not** for prod) |
-| `pnpm db:studio`             | Drizzle Studio UI for inspecting data                 |
-| `pnpm db:seed`               | Idempotent demo seed (refuses to run in production)   |
-| `pnpm discover:existing-app` | Read-only Playwright walk-through of the legacy app   |
+| Command                      | What it does                                                |
+| ---------------------------- | ----------------------------------------------------------- |
+| `pnpm dev`                   | Run the app at http://localhost:3000                        |
+| `pnpm build`                 | Production build                                            |
+| `pnpm start`                 | Run the built app                                           |
+| `pnpm lint`                  | ESLint flat config                                          |
+| `pnpm typecheck`             | TypeScript strict check                                     |
+| `pnpm format`                | Prettier write                                              |
+| `pnpm test`                  | Vitest unit tests                                           |
+| `pnpm e2e:install`           | Install Playwright browsers (one-time)                      |
+| `pnpm e2e`                   | Playwright end-to-end (boots `pnpm dev` if needed)          |
+| `pnpm db:up`                 | Start Postgres + Mailhog containers                         |
+| `pnpm db:down`               | Stop containers                                             |
+| `pnpm db:generate`           | Generate a new SQL migration after editing `src/db/schema/` |
+| `pnpm db:migrate`            | Apply pending migrations                                    |
+| `pnpm db:push`               | Push schema directly (dev shortcut, **not** for prod)       |
+| `pnpm db:studio`             | Drizzle Studio UI for inspecting data                       |
+| `pnpm db:seed`               | Idempotent demo seed (refuses to run in production)         |
+| `pnpm discover:existing-app` | Read-only Playwright walk-through of the legacy app         |
 
 ## Environment variables
 
@@ -183,6 +181,19 @@ Generate a 32-byte secret and put it in `.env.local`:
 
 - macOS/Linux: `openssl rand -base64 32`
 - Windows PowerShell: see Quick start.
+
+**`pnpm db:migrate` fails with `relation "..." already exists` after `pnpm db:generate`.**
+First setup should apply committed migrations, not generate new ones. If
+you accidentally generated a local migration during setup, remove only
+those generated Drizzle files, restore the journal if Git shows it as
+modified, then rerun the migration:
+
+```bash
+git status --short drizzle
+rm -f drizzle/0006_*.sql drizzle/meta/0006_snapshot.json
+git restore drizzle/meta/_journal.json
+pnpm db:migrate
+```
 
 **`pnpm e2e` cannot launch Chromium.**
 Run `pnpm e2e:install` once.
