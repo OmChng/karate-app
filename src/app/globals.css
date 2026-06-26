@@ -370,6 +370,21 @@
       'calt' 1;
   }
 
+  .management-paper-surface {
+    background-color: hsl(var(--background));
+    background-image: url('/images/backgrounds/off-white-wrinkle-paper.png');
+    background-position: top center;
+    background-repeat: repeat;
+    background-size: 60rem 40rem;
+  }
+
+  .dark .management-paper-surface {
+    background-image:
+      linear-gradient(hsl(var(--background) / 0.86), hsl(var(--background) / 0.86)),
+      url('/images/backgrounds/off-white-wrinkle-paper.png');
+    background-blend-mode: multiply, normal;
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     body,
     body * {

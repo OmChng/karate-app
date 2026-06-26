@@ -35,7 +35,7 @@ export default async function AppLayout({
         </div>
         <main
           id="main"
-          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-20 md:pb-0"
+          className="management-paper-surface min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-20 md:pb-0"
         >
           <div className="container py-4 sm:py-6">
             <PageTransition>{children}</PageTransition>
