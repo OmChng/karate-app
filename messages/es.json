@@ -33,6 +33,26 @@
     "hero": {
       "eyebrow": "Sitio oficial",
       "title": "Formación marcial con disciplina, comunidad y excelencia",
+      "animatedTitle": {
+        "prefix": "Formación marcial con ",
+        "terms": {
+          "discipline": {
+            "localized": "disciplina",
+            "japanese": "規律",
+            "suffix": ", "
+          },
+          "community": {
+            "localized": "comunidad",
+            "japanese": "共同体",
+            "suffix": " y "
+          },
+          "excellence": {
+            "localized": "excelencia",
+            "japanese": "卓越",
+            "suffix": ""
+          }
+        }
+      },
       "subtitle": "Acompañamos a academias mexicanas de karate con una experiencia clara para familias, alumnos, instructores y administradores.",
       "visualAlt": "Composición visual de karate y vida de dojo",
       "visualKicker": "Espíritu de dojo",
@@ -75,6 +95,26 @@
     "about": {
       "eyebrow": "Quiénes somos",
       "title": "Karate con estructura, respeto y crecimiento personal",
+      "animatedTitle": {
+        "prefix": "Karate con ",
+        "terms": {
+          "structure": {
+            "localized": "estructura",
+            "japanese": "構造",
+            "suffix": ", "
+          },
+          "respect": {
+            "localized": "respeto",
+            "japanese": "尊重",
+            "suffix": " y "
+          },
+          "growth": {
+            "localized": "crecimiento",
+            "japanese": "成長",
+            "suffix": " personal"
+          }
+        }
+      },
       "body": "Sensei Modern presenta una organización de karate orientada a la formación integral: técnica, carácter, constancia y sentido de comunidad dentro de cada dojo.",
       "supporting": "El sitio público abre la puerta a familias, alumnos y visitantes; el sistema privado permanece reservado para senseis y administradores.",
       "values": {

@@ -3,17 +3,24 @@ import { ArrowRight, Building2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import {
-  HeroTitleReveal,
   InitialReveal,
   ParallaxElement,
   StaggerContainer,
   StaggerItem,
 } from '@/components/motion/reveal';
+import { AnimatedTypingTitle } from './animated-hero-title';
 
 const HERO_STATS = ['academies', 'families', 'formation'] as const;
+const HERO_TITLE_TERMS = ['discipline', 'community', 'excellence'] as const;
 
 export function HeroSection() {
   const t = useTranslations('publicHome');
+  const titleTerms = HERO_TITLE_TERMS.map((key) => ({
+    key,
+    localized: t(`hero.animatedTitle.terms.${key}.localized`),
+    japanese: t(`hero.animatedTitle.terms.${key}.japanese`),
+    suffix: t(`hero.animatedTitle.terms.${key}.suffix`),
+  }));
 
   return (
     <section className="relative overflow-hidden border-b border-white/10 bg-[#0b0f14]">
@@ -25,9 +32,11 @@ export function HeroSection() {
               {t('hero.eyebrow')}
             </p>
           </InitialReveal>
-          <HeroTitleReveal
-            text={t('hero.title')}
-            className="text-balance text-5xl font-black leading-[0.95] tracking-normal text-white md:text-6xl lg:text-7xl"
+          <AnimatedTypingTitle
+            finalText={t('hero.title')}
+            prefix={t('hero.animatedTitle.prefix')}
+            terms={titleTerms}
+            className="public-typing-title-hero text-balance text-5xl font-black leading-[0.95] tracking-normal text-white md:text-6xl lg:text-7xl"
           />
           <InitialReveal delay={0.3} y={26} blur={5} duration={0.62}>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/[0.72] md:text-xl">
