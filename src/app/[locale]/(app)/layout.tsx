@@ -6,6 +6,7 @@ import { MobileNavTrigger } from '@/components/nav/mobile-nav-trigger';
 import { SidebarDesktop } from '@/components/nav/sidebar';
 import { BottomNav } from '@/components/nav/bottom-nav';
 import { PageTransition } from '@/components/motion/page-transition';
+import { canAccessFinance } from '@/lib/rbac';
 
 export default async function AppLayout({
   children,
@@ -23,13 +24,14 @@ export default async function AppLayout({
     redirect({ href: '/login', locale });
   }
   const userName = user?.name ?? '';
+  const canViewFinance = canAccessFinance(session);
 
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
-      <SidebarDesktop user={{ name: userName }} />
+      <SidebarDesktop user={{ name: userName }} canViewFinance={canViewFinance} />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-3 z-40 md:hidden">
-          <MobileNavTrigger userName={userName} />
+          <MobileNavTrigger userName={userName} canViewFinance={canViewFinance} />
         </div>
         <main
           id="main"

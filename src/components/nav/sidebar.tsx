@@ -15,6 +15,9 @@ type TextNavVariant = 'desktop' | 'sheet';
 type SidebarUser = {
   name?: string | null;
 };
+type SidebarAccess = {
+  canViewFinance?: boolean;
+};
 
 const ACTIVE_LINK_CLASS = 'nav-link-active font-semibold';
 const INACTIVE_LINK_CLASS = 'nav-link-inactive';
@@ -275,9 +278,11 @@ function FinanceTextSection({
 function TextNavItems({
   variant,
   onNavigate,
+  canViewFinance = false,
 }: {
   variant: TextNavVariant;
   onNavigate?: () => void;
+  canViewFinance?: boolean;
 }) {
   const t = useTranslations('nav');
   const pathname = usePathname();
@@ -285,7 +290,7 @@ function TextNavItems({
     <>
       {PRIMARY_NAV.map((item) => (
         <Fragment key={item.key}>
-          {item.key === 'settings' && (
+          {item.key === 'settings' && canViewFinance && (
             <FinanceTextSection variant={variant} onNavigate={onNavigate} />
           )}
           <li>
@@ -355,7 +360,7 @@ function FinanceRailSection() {
   );
 }
 
-function RailNavItems() {
+function RailNavItemsWithAccess({ canViewFinance = false }: SidebarAccess) {
   const t = useTranslations('nav');
   const pathname = usePathname();
   return (
@@ -365,7 +370,7 @@ function RailNavItems() {
         const label = t(key);
         return (
           <Fragment key={key}>
-            {key === 'settings' && <FinanceRailSection />}
+            {key === 'settings' && canViewFinance && <FinanceRailSection />}
             <li>
               <Link
                 href={href}
@@ -391,7 +396,13 @@ function RailNavItems() {
 /**
  * Persistent labeled sidebar for tablet and desktop (>= md, 768 px).
  */
-export function SidebarDesktop({ user }: { user: SidebarUser }) {
+export function SidebarDesktop({
+  user,
+  canViewFinance = false,
+}: {
+  user: SidebarUser;
+  canViewFinance?: boolean;
+}) {
   const t = useTranslations('nav');
   const [collapsed, setCollapsed] = useState(false);
 
@@ -430,7 +441,11 @@ export function SidebarDesktop({ user }: { user: SidebarUser }) {
       </div>
       <nav data-sidebar-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
         <ul className={cn('flex flex-col', collapsed ? 'gap-1' : 'gap-0.5')}>
-          {collapsed ? <RailNavItems /> : <TextNavItems variant="desktop" />}
+          {collapsed ? (
+            <RailNavItemsWithAccess canViewFinance={canViewFinance} />
+          ) : (
+            <TextNavItems variant="desktop" canViewFinance={canViewFinance} />
+          )}
         </ul>
       </nav>
       <div className="sidebar-footer shrink-0 border-t border-border p-2">
@@ -452,9 +467,11 @@ export function SidebarDesktop({ user }: { user: SidebarUser }) {
 export function SidebarSheetContent({
   user,
   onNavigate,
+  canViewFinance = false,
 }: {
   user: SidebarUser;
   onNavigate?: () => void;
+  canViewFinance?: boolean;
 }) {
   const t = useTranslations('nav');
   return (
@@ -465,7 +482,7 @@ export function SidebarSheetContent({
         className="-mr-2 mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2"
       >
         <ul className="flex flex-col gap-1">
-          <TextNavItems variant="sheet" onNavigate={onNavigate} />
+          <TextNavItems variant="sheet" onNavigate={onNavigate} canViewFinance={canViewFinance} />
         </ul>
       </nav>
       <div className="sidebar-footer -mx-1 shrink-0 border-t border-border pt-3">

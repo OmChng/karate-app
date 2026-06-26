@@ -7,6 +7,7 @@ export * from './members';
 export * from './guardians';
 export * from './ranks';
 export * from './promotions';
+export * from './rooms';
 export * from './classes';
 export * from './member-class-assignments';
 export * from './attendance';

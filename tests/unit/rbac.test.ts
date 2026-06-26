@@ -3,6 +3,7 @@ import type { Session } from 'next-auth';
 import {
   ForbiddenError,
   UnauthenticatedError,
+  canAccessFinance,
   currentOrganizationId,
   getRoleAccessScope,
   hasRole,
@@ -123,6 +124,31 @@ describe('requireRole', () => {
   it('passes when role present', () => {
     const s = sessionWith([{ organizationId: ORG, dojoId: null, role: 'organization_admin' }]);
     expect(() => requireRole(s, ['organization_admin'], { organizationId: ORG })).not.toThrow();
+  });
+});
+
+describe('canAccessFinance', () => {
+  it('allows super admins and organization admins only', () => {
+    expect(
+      canAccessFinance(sessionWith([{ organizationId: ORG, dojoId: null, role: 'super_admin' }])),
+    ).toBe(true);
+    expect(
+      canAccessFinance(
+        sessionWith([{ organizationId: ORG, dojoId: null, role: 'organization_admin' }]),
+      ),
+    ).toBe(true);
+  });
+
+  it('blocks dojo admins, instructors, and finance staff', () => {
+    expect(
+      canAccessFinance(sessionWith([{ organizationId: ORG, dojoId: DOJO, role: 'dojo_admin' }])),
+    ).toBe(false);
+    expect(
+      canAccessFinance(sessionWith([{ organizationId: ORG, dojoId: DOJO, role: 'instructor' }])),
+    ).toBe(false);
+    expect(
+      canAccessFinance(sessionWith([{ organizationId: ORG, dojoId: null, role: 'finance_staff' }])),
+    ).toBe(false);
   });
 });
 

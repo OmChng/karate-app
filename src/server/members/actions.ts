@@ -122,6 +122,7 @@ export async function createMemberAction(
     after: auditAfter as unknown as Record<string, unknown>,
   });
 
+  revalidatePath('/app/miembros');
   revalidatePath('/members');
   return { ok: true, data: { id: row!.id } };
 }
@@ -192,8 +193,9 @@ export async function updateMemberAction(
     after: auditAfter as unknown as Record<string, unknown>,
   });
 
+  revalidatePath('/app/miembros');
+  revalidatePath(`/app/miembros/${id}`);
   revalidatePath('/members');
-  revalidatePath(`/members/${id}`);
   return { ok: true, data: { id } };
 }
 
@@ -278,8 +280,9 @@ export async function promoteMemberAction(
     });
   });
 
+  revalidatePath('/app/miembros');
+  revalidatePath(`/app/miembros/${id}`);
   revalidatePath('/members');
-  revalidatePath(`/members/${id}`);
   return { ok: true, data: { id } };
 }
 
@@ -325,8 +328,9 @@ export async function updateMemberStatusAction(
     after: v,
   });
 
+  revalidatePath('/app/miembros');
+  revalidatePath(`/app/miembros/${id}`);
   revalidatePath('/members');
-  revalidatePath(`/members/${id}`);
   return { ok: true, data: { id } };
 }
 
@@ -399,8 +403,9 @@ export async function transferMemberDojoAction(
     });
   });
 
+  revalidatePath('/app/miembros');
+  revalidatePath(`/app/miembros/${id}`);
   revalidatePath('/members');
-  revalidatePath(`/members/${id}`);
   return { ok: true, data: { id } };
 }
 
@@ -433,6 +438,7 @@ export async function softDeleteMemberAction(id: string): Promise<ActionResult> 
     entityId: id,
   });
 
+  revalidatePath('/app/miembros');
   revalidatePath('/members');
   return { ok: true };
 }

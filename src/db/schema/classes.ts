@@ -1,6 +1,7 @@
 import { index, integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations';
 import { dojos } from './dojos';
+import { rooms } from './rooms';
 import { users } from './users';
 import { classInstructorRoleEnum, classStatusEnum } from './enums';
 
@@ -14,6 +15,7 @@ export const classes = pgTable(
     dojoId: uuid('dojo_id')
       .notNull()
       .references(() => dojos.id, { onDelete: 'restrict' }),
+    roomId: uuid('room_id').references(() => rooms.id, { onDelete: 'set null' }),
     name: text('name').notNull(),
     startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
     endsAt: timestamp('ends_at', { withTimezone: true }).notNull(),
@@ -29,6 +31,7 @@ export const classes = pgTable(
   (t) => [
     index('class_org_dojo_starts_idx').on(t.organizationId, t.dojoId, t.startsAt),
     index('class_starts_idx').on(t.startsAt),
+    index('class_room_idx').on(t.roomId),
   ],
 );
 

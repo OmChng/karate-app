@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { getRoleAccessScope, isRoleAccessScopeEmpty } from '@/lib/rbac';
-import { listDojosForAccess } from '@/server/access';
+import { listDojosForAccess, listRoomsForAccess } from '@/server/access';
 import { getClassDetailForAccess } from '@/server/classes/queries';
 import ClassDetailClient from './class-detail-client';
 
@@ -41,11 +41,13 @@ export default async function Page({
   const data = await getClassDetailForAccess(accessScope, id);
   if (!data) notFound();
   const dojoOptions = await listDojosForAccess(accessScope);
+  const roomOptions = await listRoomsForAccess(accessScope);
 
   return (
     <ClassDetailClient
       classRow={data}
       dojos={dojoOptions}
+      rooms={roomOptions}
       roster={data.roster}
       assignableMembers={data.assignableMembers}
     />

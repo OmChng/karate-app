@@ -8,6 +8,7 @@ import {
   members,
   rankDefinitions,
   ranks,
+  rooms,
 } from '@/db/schema';
 import { formatClassSchedule } from '@/lib/class-schedule';
 import type { RoleAccessScope } from '@/lib/rbac';
@@ -18,6 +19,8 @@ export interface ClassRow {
   name: string;
   dojoId: string;
   dojoName: string;
+  roomId: string | null;
+  roomName: string | null;
   scheduleLabel: string;
   capacity: number | null;
   activeMembers: number;
@@ -82,6 +85,8 @@ export async function listClassesForAccess(accessScope: RoleAccessScope): Promis
       name: classes.name,
       dojoId: classes.dojoId,
       dojoName: dojos.name,
+      roomId: classes.roomId,
+      roomName: rooms.name,
       startsAt: classes.startsAt,
       endsAt: classes.endsAt,
       recurrenceRule: classes.recurrenceRule,
@@ -91,6 +96,7 @@ export async function listClassesForAccess(accessScope: RoleAccessScope): Promis
     })
     .from(classes)
     .innerJoin(dojos, eq(dojos.id, classes.dojoId))
+    .leftJoin(rooms, eq(rooms.id, classes.roomId))
     .leftJoin(activeCounts, eq(activeCounts.classId, classes.id))
     .where(and(...filters))
     .orderBy(asc(classes.startsAt), asc(classes.name));
@@ -120,6 +126,8 @@ export async function getClassDetailForAccess(accessScope: RoleAccessScope, id: 
       name: classes.name,
       dojoId: classes.dojoId,
       dojoName: dojos.name,
+      roomId: classes.roomId,
+      roomName: rooms.name,
       startsAt: classes.startsAt,
       endsAt: classes.endsAt,
       recurrenceRule: classes.recurrenceRule,
@@ -129,6 +137,7 @@ export async function getClassDetailForAccess(accessScope: RoleAccessScope, id: 
     })
     .from(classes)
     .innerJoin(dojos, eq(dojos.id, classes.dojoId))
+    .leftJoin(rooms, eq(rooms.id, classes.roomId))
     .where(and(...filters));
 
   if (!row) return null;

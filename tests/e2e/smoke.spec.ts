@@ -1,4 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { config as loadDotenv } from 'dotenv';
+import postgres from 'postgres';
+
+loadDotenv({ path: '.env.local', quiet: true });
+loadDotenv({ quiet: true });
 
 const admin = {
   identifier: 'superadmin@sensei.local',
@@ -12,31 +17,31 @@ const bugambiliasAdmin = {
 
 const primaryRoutes = [
   { href: '/app', heading: 'Inicio', link: 'Inicio' },
-  { href: '/personal', heading: 'Staff', link: 'Staff' },
-  { href: '/personal/nuevo', heading: 'Agregar staff' },
-  { href: '/personal/demo', heading: 'Detalle de staff' },
-  { href: '/miembros', heading: 'Alumnos', link: 'Alumnos' },
-  { href: '/miembros/nuevo', heading: 'Nuevo alumno' },
-  { href: '/miembros/transferencias', heading: 'Transferencias' },
-  { href: '/clientes', heading: 'Clientes', link: 'Clientes' },
-  { href: '/salones', heading: 'Salones', link: 'Salones' },
-  { href: '/salones/demo', heading: 'Detalle de salón' },
-  { href: '/clases', heading: 'Clases', link: 'Clases' },
-  { href: '/pruebas', heading: 'Pruebas', link: 'Pruebas' },
-  { href: '/examenes', heading: 'Exámenes', link: 'Exámenes' },
-  { href: '/cintas-negras', heading: 'Liga de Cintas Negras', link: 'Liga de Cintas Negras' },
-  { href: '/planes', heading: 'Planes', link: 'Planes' },
-  { href: '/reporte', heading: 'Reporte', link: 'Reporte' },
-  { href: '/cajas', heading: 'Capturar pago de alumno', link: 'Cajas' },
-  { href: '/mensualidades', heading: 'Mensualidades', link: 'Mensualidades' },
-  { href: '/corte', heading: 'Corte', link: 'Corte' },
-  { href: '/gastos', heading: 'Gastos', link: 'Gastos' },
-  { href: '/inventario', heading: 'Inventario', link: 'Inventario' },
-  { href: '/configuracion', heading: 'Datos de contacto', link: 'Configuración' },
-  { href: '/pase-de-lista', heading: 'Pase de lista' },
-  { href: '/anuncios', heading: 'Anuncios' },
-  { href: '/dojos', heading: 'Dojos' },
-  { href: '/eventos', heading: 'Eventos' },
+  { href: '/app/personal', heading: 'Staff', link: 'Staff' },
+  { href: '/app/personal/nuevo', heading: 'Agregar staff' },
+  { href: '/app/personal/demo', heading: 'Detalle de staff' },
+  { href: '/app/miembros', heading: 'Alumnos', link: 'Alumnos' },
+  { href: '/app/miembros/nuevo', heading: 'Nuevo alumno' },
+  { href: '/app/miembros/transferencias', heading: 'Transferencias' },
+  { href: '/app/clientes', heading: 'Clientes', link: 'Clientes' },
+  { href: '/app/salones', heading: 'Salones', link: 'Salones' },
+  { href: '/app/clases', heading: 'Clases', link: 'Clases' },
+  { href: '/app/pruebas', heading: 'Pruebas', link: 'Pruebas' },
+  { href: '/app/examenes', heading: 'Exámenes', link: 'Exámenes' },
+  { href: '/app/cintas-negras', heading: 'Liga de Cintas Negras', link: 'Liga de Cintas Negras' },
+  { href: '/app/finanzas', heading: 'Finanzas', link: 'Resumen' },
+  { href: '/app/planes', heading: 'Planes', link: 'Planes' },
+  { href: '/app/reporte', heading: 'Reporte', link: 'Reporte' },
+  { href: '/app/cajas', heading: 'Capturar pago de alumno', link: 'Cajas' },
+  { href: '/app/mensualidades', heading: 'Mensualidades', link: 'Mensualidades' },
+  { href: '/app/corte', heading: 'Corte', link: 'Corte' },
+  { href: '/app/gastos', heading: 'Gastos', link: 'Gastos' },
+  { href: '/app/inventario', heading: 'Inventario', link: 'Inventario' },
+  { href: '/app/configuracion', heading: 'Datos de contacto', link: 'Configuración' },
+  { href: '/app/pase-de-lista', heading: 'Pase de lista' },
+  { href: '/app/anuncios', heading: 'Anuncios' },
+  { href: '/app/dojos', heading: 'Dojos' },
+  { href: '/app/eventos', heading: 'Eventos' },
 ];
 
 function collectRuntimeErrors(page: Page) {
@@ -86,11 +91,11 @@ async function signInAsAdmin(page: Page) {
 }
 
 async function getMemberHrefByCode(page: Page, code: string) {
-  await expectDocumentOk(page, `/miembros?q=${encodeURIComponent(code)}&pageSize=100`);
+  await expectDocumentOk(page, `/app/miembros?q=${encodeURIComponent(code)}&pageSize=100`);
   const row = page.getByRole('link', { name: /Ver detalle de / }).first();
   await expect(row).toBeVisible();
   await row.click();
-  await expect(page).toHaveURL(/\/miembros\/[0-9a-f-]+$/);
+  await expect(page).toHaveURL(/\/app\/miembros\/[0-9a-f-]+$/);
   return new URL(page.url()).pathname;
 }
 
@@ -138,6 +143,37 @@ async function cssToken(page: Page, name: string) {
   return page.locator('html').evaluate((node, tokenName) => {
     return window.getComputedStyle(node).getPropertyValue(tokenName).trim();
   }, name);
+}
+
+async function readSeedOperatingData() {
+  const url = process.env.DATABASE_URL;
+  expect(url, 'DATABASE_URL must be set for seeded data e2e checks').toBeTruthy();
+  const sql = postgres(url!, { max: 1 });
+  try {
+    return await sql<
+      {
+        code: string;
+        room_count: number;
+        student_count: number;
+        linked_member_count: number;
+      }[]
+    >`
+      select
+        d.code,
+        count(distinct r.id)::int as room_count,
+        count(distinct m.id)::int as student_count,
+        count(distinct mg.member_id)::int as linked_member_count
+      from dojo d
+      left join room r on r.dojo_id = d.id and r.deleted_at is null
+      left join member m on m.dojo_id = d.id and m.deleted_at is null and m.status = 'active'
+      left join member_guardian mg on mg.member_id = m.id
+      where d.code in ('BSA', 'BUG', 'AGU', 'SAG') and d.deleted_at is null
+      group by d.code
+      order by d.code
+    `;
+  } finally {
+    await sql.end();
+  }
 }
 
 test.describe('Smoke', () => {
@@ -369,12 +405,12 @@ test.describe('Smoke', () => {
 
     const englishMembersResponse = await page.goto('/en/members');
     expect(englishMembersResponse?.status()).toBeLessThan(400);
-    await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fmiembros$/);
+    await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fapp%2Fmiembros$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
 
     const response = await page.goto('/miembros');
     expect(response?.status()).toBeLessThan(400);
-    await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fmiembros$/);
+    await expect(page).toHaveURL(/\/iniciar-sesion\?next=%2Fapp%2Fmiembros$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
   });
 
@@ -387,12 +423,26 @@ test.describe('Smoke', () => {
     await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
   });
 
+  test('old top-level management URLs redirect to canonical /app paths', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Canonical redirect check runs once.');
+
+    await signInAsAdmin(page);
+    const response = await page.goto('/miembros?q=CTR-R07&pageSize=100', {
+      waitUntil: 'domcontentloaded',
+    });
+    expect(response?.status()).toBeLessThan(400);
+    await expect(page).toHaveURL(/\/app\/miembros\?q=CTR-R07&pageSize=100$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Alumnos' })).toBeVisible();
+  });
+
   test('role scopes show the right seeded academies', async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     test.skip(testInfo.project.name !== 'chromium', 'Scoped academy visibility runs once.');
 
     await signInAsAdmin(page);
-    await expectDocumentOk(page, '/clases');
+    await expectDocumentOk(page, '/app/clases');
     for (const dojoName of [
       'Bosques de Santa Anita',
       'Bugambilias',
@@ -401,23 +451,65 @@ test.describe('Smoke', () => {
     ]) {
       await expect(page.locator('tbody').getByText(dojoName).first()).toBeVisible();
     }
-    await expectDocumentOk(page, '/miembros?q=BUG-001&pageSize=100');
+    await expectDocumentOk(page, '/app/miembros?q=BUG-001&pageSize=100');
     await expect(
       page.getByRole('link', { name: /Ver detalle de Aitana Bravo Medina/ }),
     ).toBeVisible();
 
     await page.context().clearCookies();
     await signIn(page, bugambiliasAdmin);
-    await expectDocumentOk(page, '/clases');
+    await expect(page.getByRole('button', { name: 'Finanzas', exact: true })).toHaveCount(0);
+    const financeResponse = await page.goto('/app/finanzas', { waitUntil: 'domcontentloaded' });
+    expect(financeResponse?.status()).toBeLessThan(400);
+    await expect(page.getByRole('heading', { level: 1, name: 'No encontrado' })).toBeVisible();
+
+    await expectDocumentOk(page, '/app/clases');
     await expect(page.locator('tbody').getByText('Bugambilias').first()).toBeVisible();
     await expect(page.locator('tbody').getByText('Bosques de Santa Anita')).toHaveCount(0);
 
-    await expectDocumentOk(page, '/miembros?q=BUG-001&pageSize=100');
+    await expectDocumentOk(page, '/app/miembros?q=BUG-001&pageSize=100');
     await expect(
       page.getByRole('link', { name: /Ver detalle de Aitana Bravo Medina/ }),
     ).toBeVisible();
-    await expectDocumentOk(page, '/miembros?q=CTR-R07&pageSize=100');
+    await expectDocumentOk(page, '/app/miembros?q=CTR-R07&pageSize=100');
     await expect(page.getByRole('link', { name: /Ver detalle de / })).toHaveCount(0);
+  });
+
+  test('dashboard rank distribution links to filtered students', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Dashboard rank filter check runs once.');
+
+    await signInAsAdmin(page);
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Distribución por grado' }),
+    ).toBeVisible();
+    const yellowRankSegment = page
+      .getByRole('link', { name: /9° Kyu: .*% de los alumnos/ })
+      .first();
+    await expect(yellowRankSegment).toBeVisible();
+    await yellowRankSegment.click();
+    await expect(page).toHaveURL(/\/app\/miembros\?rankLevel=3&page=1$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Alumnos' })).toBeVisible();
+  });
+
+  test('seeded academies include rooms, students, and linked clients', async ({
+    page: _page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Seeded DB check runs once.');
+
+    const rows = await readSeedOperatingData();
+    const byCode = new Map(rows.map((row) => [row.code, row]));
+
+    expect(byCode.get('BSA')?.room_count).toBe(2);
+    expect(byCode.get('BUG')?.room_count).toBe(1);
+    expect(byCode.get('AGU')?.room_count).toBe(1);
+    expect(byCode.get('SAG')?.room_count).toBe(1);
+
+    for (const code of ['BSA', 'BUG', 'AGU', 'SAG']) {
+      const row = byCode.get(code);
+      expect(row?.student_count, `${code} student count`).toBeGreaterThanOrEqual(60);
+      expect(row?.student_count, `${code} student count`).toBeLessThanOrEqual(100);
+      expect(row?.linked_member_count, `${code} linked client count`).toBe(row?.student_count);
+    }
   });
 
   test('theme toggle switches modes and persists after reload', async ({ page }, testInfo) => {
@@ -552,14 +644,22 @@ test.describe('Smoke', () => {
     const runtimeErrors = collectRuntimeErrors(page);
 
     await signInAsAdmin(page);
-    await expectDocumentOk(page, '/miembros');
+    await expectDocumentOk(page, '/app/miembros');
     await expect(page.getByRole('columnheader', { name: 'Alumno' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Grado' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Edad' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Clase' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Faltas del mes' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Estado' })).toBeVisible();
-    await expect(page.locator('tbody').getByText('8°/7° Kyu').first()).toBeVisible();
+    const pageSizeSelect = page.getByLabel('Alumnos por página');
+    await expect(pageSizeSelect).toBeEnabled();
+    await expect(pageSizeSelect).toContainText('20');
+    await pageSizeSelect.click();
+    await page.getByRole('menuitemradio', { name: '40' }).click();
+    await expect(page).toHaveURL(/pageSize=40/);
+
+    await expectDocumentOk(page, '/app/miembros?q=CTR-R07&pageSize=100');
+    await expect(page.locator('tbody').getByText('3° Kyu').first()).toBeVisible();
     await expect(page.locator('tbody').getByText('Victoria Navarro Vargas').first()).toBeVisible();
     await expect(page.locator('tbody').getByText('Navarro Vargas, Victoria')).toHaveCount(0);
     await expect(page.locator('tbody').getByText('ビクトリア').first()).toBeVisible();
@@ -569,11 +669,6 @@ test.describe('Smoke', () => {
     await expect(page.locator('tbody').getByText('0 faltas').first()).toHaveClass(
       /bg-success-subtle/,
     );
-    const pageSizeSelect = page.getByLabel('Alumnos por página');
-    await expect(pageSizeSelect).toBeEnabled();
-    await expect(pageSizeSelect).toHaveValue('20');
-    await pageSizeSelect.selectOption('40');
-    await expect(page).toHaveURL(/pageSize=40/);
 
     const memberHref = await getMemberHrefByCode(page, 'CTR-R07');
 
@@ -602,15 +697,18 @@ test.describe('Smoke', () => {
     await expectDocumentOk(page, `${memberHref}/editar`);
     await expect(page.getByRole('heading', { level: 1, name: 'Editar alumno' })).toBeVisible();
 
-    await expectDocumentOk(page, '/clases');
+    await expectDocumentOk(page, '/app/clases');
     await expect(page.getByRole('heading', { level: 1, name: 'Clases' })).toBeVisible();
     const classRow = page.getByRole('link', { name: /Ver detalle de clase / }).first();
-    await expect(classRow, 'Expected at least one seeded class row link on /clases').toBeVisible();
+    await expect(
+      classRow,
+      'Expected at least one seeded class row link on /app/clases',
+    ).toBeVisible();
     await classRow.click();
-    await expect(page).toHaveURL(/\/clases\/[0-9a-f-]+$/);
+    await expect(page).toHaveURL(/\/app\/clases\/[0-9a-f-]+$/);
     await expect(page.getByRole('heading', { level: 2, name: 'Alumnos asignados' })).toBeVisible();
 
-    const malformedResponse = await page.goto('/miembros/not-a-uuid', {
+    const malformedResponse = await page.goto('/app/miembros/not-a-uuid', {
       waitUntil: 'domcontentloaded',
     });
     expect(malformedResponse?.status()).toBeLessThan(400);
@@ -651,7 +749,7 @@ test.describe('Smoke', () => {
     const runtimeErrors = collectRuntimeErrors(page);
 
     await signInAsAdmin(page);
-    await expectDocumentOk(page, '/miembros');
+    await expectDocumentOk(page, '/app/miembros');
     await expect(page.getByRole('heading', { level: 1, name: 'Alumnos' })).toBeVisible();
 
     if (testInfo.project.name === 'iphone-14') {

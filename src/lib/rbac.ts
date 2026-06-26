@@ -48,6 +48,7 @@ const ROLE_INHERITS: Partial<Record<UserRole, UserRole[]>> = {
 };
 
 const ORGANIZATION_WIDE_ROLES = new Set<UserRole>(['organization_admin', 'finance_staff']);
+export const FINANCE_ACCESS_ROLES = ['organization_admin'] as const satisfies readonly UserRole[];
 
 function expandRoles(roles: readonly UserRole[]): Set<UserRole> {
   const out = new Set<UserRole>();
@@ -61,6 +62,10 @@ function expandRoles(roles: readonly UserRole[]): Set<UserRole> {
 
 export function isSuperAdmin(session: Session | null): boolean {
   return session?.user?.roles?.some((role) => role.role === 'super_admin') ?? false;
+}
+
+export function canAccessFinance(session: Session | null): boolean {
+  return hasRole(session, FINANCE_ACCESS_ROLES);
 }
 
 export function hasRole(

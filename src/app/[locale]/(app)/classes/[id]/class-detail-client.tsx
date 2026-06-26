@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useTransition, type FormEvent } from 'react';
+import { useMemo, useState, useTransition, type FormEvent } from 'react';
 import { ArrowLeft, Edit, Trash2, UserPlus } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/routing';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -46,6 +46,8 @@ interface Props {
     name: string;
     dojoId: string;
     dojoName: string;
+    roomId: string | null;
+    roomName: string | null;
     startsAt: Date | string;
     endsAt: Date | string;
     recurrenceRule: string | null;
@@ -55,6 +57,7 @@ interface Props {
     notes: string | null;
   };
   dojos: Array<{ id: string; name: string }>;
+  rooms: Array<{ id: string; dojoId: string; dojoName: string; name: string }>;
   roster: RosterMember[];
   assignableMembers: AssignableMember[];
 }
@@ -65,7 +68,13 @@ const INPUT_CLASS =
   'min-h-11 rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 const DAYS = ['L', 'M', 'Mi', 'J', 'V', 'S', 'D'] as const;
 
-export default function ClassDetailClient({ classRow, dojos, roster, assignableMembers }: Props) {
+export default function ClassDetailClient({
+  classRow,
+  dojos,
+  rooms,
+  roster,
+  assignableMembers,
+}: Props) {
   const t = useTranslations('classes.detail');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -118,10 +127,12 @@ export default function ClassDetailClient({ classRow, dojos, roster, assignableM
           <div>
             <p className="text-sm font-medium text-primary">{classRow.scheduleLabel}</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight">{classRow.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{classRow.dojoName}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {classRow.dojoName} · {classRow.roomName ?? t('emptyRoom')}
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <EditClassSheet classRow={classRow} dojos={dojos} />
+            <EditClassSheet classRow={classRow} dojos={dojos} rooms={rooms} />
             <DeleteClassButton classRow={classRow} onMessage={setMessage} />
           </div>
         </div>
@@ -221,9 +232,11 @@ export default function ClassDetailClient({ classRow, dojos, roster, assignableM
 function EditClassSheet({
   classRow,
   dojos,
+  rooms,
 }: {
   classRow: Props['classRow'];
   dojos: Props['dojos'];
+  rooms: Props['rooms'];
 }) {
   const t = useTranslations('classes.detail');
   const tClasses = useTranslations('classes');
@@ -231,6 +244,12 @@ function EditClassSheet({
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const selectedDays = normalizeClassDays(classRow.recurrenceRule);
+  const [selectedDojoId, setSelectedDojoId] = useState(classRow.dojoId);
+  const [selectedRoomId, setSelectedRoomId] = useState(classRow.roomId ?? '');
+  const availableRooms = useMemo(
+    () => rooms.filter((room) => room.dojoId === selectedDojoId),
+    [rooms, selectedDojoId],
+  );
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -241,6 +260,7 @@ function EditClassSheet({
       const res = await updateClassAction(classRow.id, {
         name: String(formData.get('name') ?? ''),
         dojoId: String(formData.get('dojoId') ?? ''),
+        roomId: String(formData.get('roomId') ?? '') || undefined,
         days: formData.getAll('days').map(String) as Array<(typeof DAYS)[number]>,
         startTime: String(formData.get('startTime') ?? ''),
         endTime: String(formData.get('endTime') ?? ''),
@@ -283,12 +303,35 @@ function EditClassSheet({
             <NativeSelect
               name="dojoId"
               wrapperClassName="w-full"
-              defaultValue={classRow.dojoId}
+              value={selectedDojoId}
+              onChange={(event) => {
+                const dojoId = event.currentTarget.value;
+                setSelectedDojoId(dojoId);
+                if (!rooms.some((room) => room.dojoId === dojoId && room.id === selectedRoomId)) {
+                  setSelectedRoomId('');
+                }
+              }}
               required
             >
               {dojos.map((dojo) => (
                 <option key={dojo.id} value={dojo.id}>
                   {dojo.name}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            {tClasses('form.room')}
+            <NativeSelect
+              name="roomId"
+              wrapperClassName="w-full"
+              value={selectedRoomId}
+              onChange={(event) => setSelectedRoomId(event.currentTarget.value)}
+            >
+              <option value="">{tClasses('form.roomNone')}</option>
+              {availableRooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
                 </option>
               ))}
             </NativeSelect>

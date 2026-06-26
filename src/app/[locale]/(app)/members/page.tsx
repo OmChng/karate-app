@@ -7,6 +7,7 @@ import { listMembersForAccess } from '@/server/members/queries';
 import { memberListQuerySchema, type MemberListQuery } from '@/server/members/schemas';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
+import { rankCatalog } from '@/lib/rank-catalog';
 import {
   panelHeaderDescriptionClass,
   panelHeaderVariants,
@@ -44,6 +45,7 @@ export default async function MembersPage({
     q: typeof raw.q === 'string' ? raw.q : undefined,
     status: typeof raw.status === 'string' ? raw.status : undefined,
     dojoId: typeof raw.dojoId === 'string' ? raw.dojoId : undefined,
+    rankLevel: typeof raw.rankLevel === 'string' ? raw.rankLevel : undefined,
     sortBy: typeof raw.sortBy === 'string' ? raw.sortBy : undefined,
     sortDir: typeof raw.sortDir === 'string' ? raw.sortDir : undefined,
   });
@@ -53,6 +55,7 @@ export default async function MembersPage({
     q: undefined,
     status: undefined,
     dojoId: undefined,
+    rankLevel: undefined,
     sortBy: 'name',
     sortDir: 'asc',
   };
@@ -90,7 +93,13 @@ export default async function MembersPage({
       </div>
 
       <div className="p-4">
-        <MembersTable rows={rows} total={total} query={query} dojos={dojoOptions} />
+        <MembersTable
+          rows={rows}
+          total={total}
+          query={query}
+          dojos={dojoOptions}
+          ranks={rankCatalog}
+        />
       </div>
     </section>
   );

@@ -142,24 +142,14 @@ export async function listMembersForAccess(
   const offset = (q.page - 1) * q.pageSize;
   const monthStart = currentMonthStart();
 
-  const filters: SQL[] = [isNull(members.deletedAt)];
-  const accessFilter = memberAccessPredicate(accessScope);
-  if (accessFilter) filters.push(accessFilter);
-  if (q.status) filters.push(eq(members.status, q.status));
-  if (q.dojoId) filters.push(eq(members.dojoId, q.dojoId));
-  if (q.q && q.q.length > 0) {
-    const pattern = `%${q.q}%`;
-    const search = or(
-      ilike(members.firstName, pattern),
-      ilike(members.firstNameKatakana, pattern),
-      ilike(members.lastName, pattern),
-      ilike(members.code, pattern),
-    );
-    if (search) filters.push(search);
-  }
-  const where = and(...filters);
+  const where = buildMemberListWhere(accessScope, q);
 
-  const [{ total } = { total: 0 }] = await db.select({ total: count() }).from(members).where(where);
+  const [{ total } = { total: 0 }] = await db
+    .select({ total: count() })
+    .from(members)
+    .leftJoin(ranks, and(eq(ranks.memberId, members.id), eq(ranks.isCurrent, sql`true`)))
+    .leftJoin(rankDefinitions, eq(rankDefinitions.id, ranks.rankDefinitionId))
+    .where(where);
 
   const monthlyAbsenceCounts = db
     .select({
@@ -265,6 +255,26 @@ export async function listMembersForAccess(
     }),
     total: Number(total ?? 0),
   };
+}
+
+export function buildMemberListWhere(accessScope: RoleAccessScope, q: MemberListQuery): SQL {
+  const filters: SQL[] = [isNull(members.deletedAt)];
+  const accessFilter = memberAccessPredicate(accessScope);
+  if (accessFilter) filters.push(accessFilter);
+  if (q.status) filters.push(eq(members.status, q.status));
+  if (q.dojoId) filters.push(eq(members.dojoId, q.dojoId));
+  if (q.rankLevel) filters.push(eq(rankDefinitions.level, q.rankLevel));
+  if (q.q && q.q.length > 0) {
+    const pattern = `%${q.q}%`;
+    const search = or(
+      ilike(members.firstName, pattern),
+      ilike(members.firstNameKatakana, pattern),
+      ilike(members.lastName, pattern),
+      ilike(members.code, pattern),
+    );
+    if (search) filters.push(search);
+  }
+  return and(...filters) ?? sql`true`;
 }
 
 export async function listMembersForOrg(

@@ -1,13 +1,13 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { and, count, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { auth } from '@/lib/auth';
 import { getRoleAccessScope, isRoleAccessScopeEmpty, type RoleAccessScope } from '@/lib/rbac';
 import { db } from '@/db/client';
-import { members, classes, attendance, payments } from '@/db/schema';
-import { formatCurrency } from '@/lib/utils';
+import { members, classes, attendance, rankDefinitions, ranks } from '@/db/schema';
+import { getRankIndicatorBackground } from '@/lib/rank-visuals';
 import { MetricCard, type MetricTone } from '@/components/ui/metric-card';
 import {
   panelHeaderDescriptionClass,
@@ -38,9 +38,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   let memberCount = 0;
   let classesToday = 0;
   let attendanceWeek = 0;
-  let revenueMonth = 0;
   let currentMonthBirthdays: BirthdayMember[] = [];
   let nextMonthBirthdays: BirthdayMember[] = [];
+  let rankDistribution: RankDistributionSegment[] = [];
 
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
@@ -55,16 +55,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     end.setDate(end.getDate() + 1);
     const weekAgo = new Date(today);
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const monthStart = new Date(today);
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
     const startIso = start.toISOString();
     const endIso = end.toISOString();
     const weekAgoIso = weekAgo.toISOString();
-    const monthStartIso = monthStart.toISOString();
     const memberAccessFilter = memberAccessPredicate(accessScope);
     const classAccessFilter = classAccessPredicate(accessScope);
-    const paymentAccessFilter = paymentAccessPredicate(accessScope);
 
     const memberCountFilters: SQL[] = [eq(members.status, 'active'), isNull(members.deletedAt)];
     if (memberAccessFilter) memberCountFilters.push(memberAccessFilter);
@@ -73,6 +68,32 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       .from(members)
       .where(and(...memberCountFilters));
     memberCount = m?.c ?? 0;
+
+    const rankDistributionFilters: SQL[] = [
+      eq(members.status, 'active'),
+      isNull(members.deletedAt),
+      isNull(rankDefinitions.deletedAt),
+    ];
+    if (memberAccessFilter) rankDistributionFilters.push(memberAccessFilter);
+    const rankRows = await db
+      .select({
+        level: rankDefinitions.level,
+        name: rankDefinitions.name,
+        color: rankDefinitions.color,
+        studentCount: count().as('student_count'),
+      })
+      .from(members)
+      .innerJoin(ranks, and(eq(ranks.memberId, members.id), eq(ranks.isCurrent, sql`true`)))
+      .innerJoin(rankDefinitions, eq(rankDefinitions.id, ranks.rankDefinitionId))
+      .where(and(...rankDistributionFilters))
+      .groupBy(rankDefinitions.level, rankDefinitions.name, rankDefinitions.color)
+      .orderBy(asc(rankDefinitions.level));
+    rankDistribution = rankRows.map((row) => ({
+      level: row.level,
+      name: row.name,
+      color: row.color,
+      count: Number(row.studentCount ?? 0),
+    }));
 
     const classesTodayFilters: SQL[] = [
       sql`${classes.startsAt} >= ${startIso}::timestamptz`,
@@ -98,17 +119,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       .innerJoin(classes, eq(classes.id, attendance.classId))
       .where(and(...attendanceFilters));
     attendanceWeek = a?.c ?? 0;
-
-    const revenueFilters: SQL[] = [
-      sql`${payments.paidAt} >= ${monthStartIso}::timestamptz`,
-      isNull(payments.deletedAt),
-    ];
-    if (paymentAccessFilter) revenueFilters.push(paymentAccessFilter);
-    const [r] = await db
-      .select({ total: sql<string>`COALESCE(SUM(${payments.amount})::text, '0')` })
-      .from(payments)
-      .where(and(...revenueFilters));
-    revenueMonth = Number(r?.total ?? 0);
 
     const birthdayFilters: SQL[] = [
       isNull(members.deletedAt),
@@ -154,11 +164,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       value: attendanceWeek.toString(),
       tone: 'signal',
     },
-    {
-      label: t('kpis.revenueMonth'),
-      value: formatCurrency(revenueMonth, 'MXN', 'es-MX'),
-      tone: 'good',
-    },
   ];
 
   return (
@@ -192,6 +197,17 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           />
         </div>
       </section>
+      <RankDistribution
+        title={t('rankDistribution.title')}
+        subtitle={t('rankDistribution.subtitle')}
+        empty={t('rankDistribution.empty')}
+        total={memberCount}
+        segments={rankDistribution}
+        percentText={(percent) => t('rankDistribution.percent', { percent })}
+        segmentLabel={(name, count, percent) =>
+          t('rankDistribution.segmentLabel', { rank: name, count, percent })
+        }
+      />
     </div>
   );
 }
@@ -228,22 +244,6 @@ function classAccessPredicate(scope: RoleAccessScope): SQL | undefined {
   return or(...predicates) ?? sql`false`;
 }
 
-function paymentAccessPredicate(scope: RoleAccessScope): SQL | undefined {
-  if (scope.global) return undefined;
-
-  const predicates: SQL[] = [];
-  if (scope.organizationIds.length > 0) {
-    predicates.push(inArray(payments.organizationId, scope.organizationIds));
-  }
-  if (scope.dojoIds.length > 0) {
-    predicates.push(inArray(payments.dojoId, scope.dojoIds));
-  }
-
-  if (predicates.length === 0) return sql`false`;
-  if (predicates.length === 1) return predicates[0];
-  return or(...predicates) ?? sql`false`;
-}
-
 interface BirthdayMember {
   id: string;
   firstName: string;
@@ -251,6 +251,98 @@ interface BirthdayMember {
   dateOfBirth: string;
   birthMonth: number;
   birthDay: number;
+}
+
+interface RankDistributionSegment {
+  level: number;
+  name: string;
+  color: string | null;
+  count: number;
+}
+
+function RankDistribution({
+  title,
+  subtitle,
+  empty,
+  total,
+  segments,
+  percentText,
+  segmentLabel,
+}: {
+  title: string;
+  subtitle: string;
+  empty: string;
+  total: number;
+  segments: RankDistributionSegment[];
+  percentText: (percent: number) => string;
+  segmentLabel: (name: string, count: number, percent: number) => string;
+}) {
+  return (
+    <section className={panelShellClass}>
+      <div className={panelHeaderVariants('accent')}>
+        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <p className={panelHeaderDescriptionClass}>{subtitle}</p>
+      </div>
+      {segments.length === 0 || total === 0 ? (
+        <p className="p-4 text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <div className="overflow-x-auto p-4">
+          <div className="flex min-w-[34rem] overflow-hidden rounded-md border border-border bg-secondary md:min-w-0">
+            {segments.map((segment) => {
+              const percent = Math.round((segment.count / total) * 100);
+              const label = segmentLabel(segment.name, segment.count, percent);
+              const background = getRankIndicatorBackground(segment);
+              return (
+                <Link
+                  key={segment.level}
+                  href={{
+                    pathname: '/members',
+                    query: { rankLevel: String(segment.level), page: '1' },
+                  }}
+                  aria-label={label}
+                  title={percentText(percent)}
+                  className="group flex min-h-12 min-w-11 items-center justify-center border-r border-border last:border-r-0 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  style={{ flexGrow: segment.count, flexBasis: 0, background: background ?? '' }}
+                >
+                  <span className="sr-only">{percentText(percent)}</span>
+                  <span
+                    className="hidden rounded-sm bg-background/85 px-1.5 py-0.5 text-[0.6875rem] font-semibold text-foreground shadow-sm group-hover:block group-focus-visible:block md:block"
+                    aria-hidden
+                  >
+                    {percent}%
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-3">
+            {segments.map((segment) => {
+              const background = getRankIndicatorBackground(segment);
+              return (
+                <Link
+                  key={`legend-${segment.level}`}
+                  href={{
+                    pathname: '/members',
+                    query: { rankLevel: String(segment.level), page: '1' },
+                  }}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-md px-2 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span
+                    className="h-5 w-5 shrink-0 rounded-full border border-border"
+                    style={{ background: background ?? undefined }}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 truncate">
+                    {segment.name} · {segment.count}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function BirthdayList({

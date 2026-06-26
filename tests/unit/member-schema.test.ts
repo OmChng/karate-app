@@ -123,6 +123,19 @@ describe('memberListQuerySchema', () => {
     }
   });
 
+  it('parses explicit rank filters', () => {
+    const r = memberListQuerySchema.safeParse({ rankLevel: '3' });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.rankLevel).toBe(3);
+    }
+  });
+
+  it('rejects rank filters outside the catalog', () => {
+    expect(memberListQuerySchema.safeParse({ rankLevel: '0' }).success).toBe(false);
+    expect(memberListQuerySchema.safeParse({ rankLevel: '13' }).success).toBe(false);
+  });
+
   it('rejects unsupported sort options', () => {
     const r = memberListQuerySchema.safeParse({ sortBy: 'dojo', sortDir: 'sideways' });
     expect(r.success).toBe(false);

@@ -24,6 +24,9 @@ import {
   classes,
   classInstructors,
   memberClassAssignments,
+  rooms,
+  guardians,
+  memberGuardians,
   attendance,
   payments,
   files,
@@ -103,8 +106,50 @@ const SEEDED_ACADEMIES = [
   },
 ] as const;
 
+const SEEDED_ROOMS_BY_ACADEMY = {
+  bosquesSantaAnita: [
+    {
+      key: 'principal',
+      name: 'Dojo principal',
+      capacity: 24,
+      notes: 'Tatami principal para clases regulares y grupos grandes.',
+    },
+    {
+      key: 'auxiliar',
+      name: 'Salón auxiliar',
+      capacity: 14,
+      notes: 'Espacio secundario para grupos pequeños, asesorías y preparación.',
+    },
+  ],
+  bugambilias: [
+    {
+      key: 'principal',
+      name: 'Dojo principal',
+      capacity: 22,
+      notes: 'Salón principal para la operación semanal de Bugambilias.',
+    },
+  ],
+  lasAguilas: [
+    {
+      key: 'principal',
+      name: 'Dojo principal',
+      capacity: 22,
+      notes: 'Salón principal para la operación semanal de Las Águilas.',
+    },
+  ],
+  sanAgustin: [
+    {
+      key: 'principal',
+      name: 'Dojo principal',
+      capacity: 22,
+      notes: 'Salón principal para la operación semanal de San Agustín.',
+    },
+  ],
+} as const;
+
 type SeedAcademy = (typeof SEEDED_ACADEMIES)[number];
 type SeedAcademyKey = SeedAcademy['key'];
+type SeedRoomKey = (typeof SEEDED_ROOMS_BY_ACADEMY)[SeedAcademyKey][number]['key'];
 
 interface MemberSeedInput {
   firstName: string;
@@ -329,8 +374,13 @@ async function main() {
     usersCreated: 0,
     usersUpdated: 0,
     rolesCreated: 0,
+    roomsCreated: 0,
+    roomsUpdated: 0,
     membersCreated: 0,
     membersUpdated: 0,
+    guardiansCreated: 0,
+    guardiansUpdated: 0,
+    guardianLinksCreated: 0,
     classesCreated: 0,
     classesUpdated: 0,
     attendanceCreated: 0,
@@ -452,6 +502,52 @@ async function main() {
   }
   await moveLegacyCentralDojoData(academyDojosByKey[BOSQUES_KEY].id);
 
+  async function ensureRoom(
+    academyKey: SeedAcademyKey,
+    input: (typeof SEEDED_ROOMS_BY_ACADEMY)[SeedAcademyKey][number],
+  ) {
+    const dojo = academyDojosByKey[academyKey];
+    let [row] = await db
+      .select()
+      .from(rooms)
+      .where(sql`${rooms.dojoId} = ${dojo.id} AND ${rooms.name} = ${input.name}`);
+    const roomValues = {
+      organizationId: org!.id,
+      dojoId: dojo.id,
+      name: input.name,
+      capacity: input.capacity,
+      notes: input.notes,
+      active: true,
+      deletedAt: null,
+      updatedAt: new Date(),
+    };
+
+    if (!row) {
+      [row] = await db.insert(rooms).values(roomValues).returning();
+      stats.roomsCreated += 1;
+      return row!;
+    }
+
+    const [updated] = await db
+      .update(rooms)
+      .set(roomValues)
+      .where(eq(rooms.id, row.id))
+      .returning();
+    stats.roomsUpdated += 1;
+    return updated ?? row;
+  }
+
+  const academyRoomsByKey = {} as Record<
+    SeedAcademyKey,
+    Record<SeedRoomKey, typeof rooms.$inferSelect>
+  >;
+  for (const academy of SEEDED_ACADEMIES) {
+    academyRoomsByKey[academy.key] = {} as Record<SeedRoomKey, typeof rooms.$inferSelect>;
+    for (const roomInput of SEEDED_ROOMS_BY_ACADEMY[academy.key]) {
+      academyRoomsByKey[academy.key][roomInput.key] = await ensureRoom(academy.key, roomInput);
+    }
+  }
+
   // Users
   async function upsertUser(input: {
     email: string;
@@ -527,6 +623,14 @@ async function main() {
     name: 'Super Admin Gojukan',
     password: 'superadmin1234',
     role: 'super_admin',
+    dojoId: null,
+  });
+
+  await upsertUser({
+    email: 'orgadmin@sensei.local',
+    name: 'Administración Gojukan',
+    password: 'admin1234',
+    role: 'organization_admin',
     dojoId: null,
   });
 
@@ -647,6 +751,7 @@ async function main() {
       stats.membersUpdated += 1;
     }
     await ensureCurrentRank(row!.id, input.rankLevel, actor.id);
+    await ensureClientForMember(row!, input, academyKey);
     seededMembersByAcademy[academyKey].push(row!);
     return row!;
   }
@@ -696,6 +801,82 @@ async function main() {
       isCurrent: true,
       notes: 'Rango demo asignado por seed.',
     });
+  }
+
+  function codeToken(code: string) {
+    return code
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function codeNumber(code: string) {
+    return [...code].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  }
+
+  function fallbackClientPhone(academy: SeedAcademy, code: string) {
+    return generatedPhone(academy.whatsapp, academy, (codeNumber(code) % 700) + 100, 900);
+  }
+
+  async function ensureClientForMember(
+    member: typeof members.$inferSelect,
+    input: MemberSeedInput,
+    academyKey: SeedAcademyKey,
+  ) {
+    const academy = SEEDED_ACADEMIES.find((item) => item.key === academyKey)!;
+    const age = ageFromDateOfBirth(input.dateOfBirth);
+    const underage = age === null || age < 18;
+    const token = codeToken(input.code);
+    const relationship = underage ? 'tutor' : 'alumno';
+    const email = `cliente.${token}@sensei.local`;
+    const phone =
+      (underage ? input.emergencyPhone || input.phone : input.phone || input.emergencyPhone) ??
+      fallbackClientPhone(academy, input.code);
+    const clientValues = {
+      organizationId: org!.id,
+      firstName: underage ? `Tutor ${input.firstName}` : input.firstName,
+      lastName: input.lastName,
+      email,
+      phone,
+      relationship,
+      deletedAt: null,
+      updatedAt: new Date(),
+    };
+
+    let [client] = await db
+      .select()
+      .from(guardians)
+      .where(sql`${guardians.organizationId} = ${org!.id} AND ${guardians.email} = ${email}`);
+
+    if (!client) {
+      [client] = await db.insert(guardians).values(clientValues).returning();
+      stats.guardiansCreated += 1;
+    } else {
+      const [updated] = await db
+        .update(guardians)
+        .set(clientValues)
+        .where(eq(guardians.id, client.id))
+        .returning();
+      client = updated ?? client;
+      stats.guardiansUpdated += 1;
+    }
+
+    const existingLink = await db
+      .select()
+      .from(memberGuardians)
+      .where(
+        sql`${memberGuardians.memberId} = ${member.id} AND ${memberGuardians.guardianId} = ${client!.id}`,
+      );
+
+    if (existingLink.length === 0) {
+      await db.insert(memberGuardians).values({
+        memberId: member.id,
+        guardianId: client!.id,
+        relationship,
+        isPrimary: true,
+      });
+      stats.guardianLinksCreated += 1;
+    }
   }
 
   type DemoClassKey = 'smallKids' | 'bigKids' | 'teens' | 'adults';
@@ -1461,6 +1642,7 @@ async function main() {
 
   async function ensureClass(input: {
     academyKey: SeedAcademyKey;
+    roomKey: SeedRoomKey;
     name: string;
     startTime: string;
     endTime: string;
@@ -1469,6 +1651,7 @@ async function main() {
     notes: string;
   }) {
     const dojo = academyDojosByKey[input.academyKey];
+    const room = academyRoomsByKey[input.academyKey][input.roomKey];
     const instructor = academyUsersByKey[input.academyKey].instructor;
     const existingClass = await db
       .select()
@@ -1478,6 +1661,7 @@ async function main() {
     const classValues = {
       organizationId: org!.id,
       dojoId: dojo!.id,
+      roomId: room.id,
       name: input.name,
       startsAt: dateWithTime(input.startTime),
       endsAt: dateWithTime(input.endTime),
@@ -1524,6 +1708,7 @@ async function main() {
     demoClassesByAcademy[academy.key] = {
       smallKids: await ensureClass({
         academyKey: academy.key,
+        roomKey: 'principal',
         name: 'Niños pequeños',
         startTime: '16:00',
         endTime: '17:00',
@@ -1533,6 +1718,7 @@ async function main() {
       }),
       bigKids: await ensureClass({
         academyKey: academy.key,
+        roomKey: 'principal',
         name: 'Niños grandes',
         startTime: '17:00',
         endTime: '18:00',
@@ -1542,6 +1728,7 @@ async function main() {
       }),
       teens: await ensureClass({
         academyKey: academy.key,
+        roomKey: academy.key === BOSQUES_KEY ? 'auxiliar' : 'principal',
         name: 'Adolescentes',
         startTime: '18:00',
         endTime: '19:00',
@@ -1551,6 +1738,7 @@ async function main() {
       }),
       adults: await ensureClass({
         academyKey: academy.key,
+        roomKey: academy.key === BOSQUES_KEY ? 'auxiliar' : 'principal',
         name: 'Adultos',
         startTime: '19:00',
         endTime: '20:00',

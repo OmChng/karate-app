@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { getRoleAccessScope, isRoleAccessScopeEmpty } from '@/lib/rbac';
-import { listDojosForAccess } from '@/server/access';
+import { listDojosForAccess, listRoomsForAccess } from '@/server/access';
 import { listClassesForAccess } from '@/server/classes/queries';
 import ClassesClient from './classes-client';
 
@@ -25,6 +25,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
 
   const classRows = await listClassesForAccess(accessScope);
   const dojoOptions = await listDojosForAccess(accessScope);
+  const roomOptions = await listRoomsForAccess(accessScope);
 
-  return <ClassesClient classes={classRows} dojos={dojoOptions} />;
+  return <ClassesClient classes={classRows} dojos={dojoOptions} rooms={roomOptions} />;
 }

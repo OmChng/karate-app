@@ -126,6 +126,7 @@ export const memberListQuerySchema = z.object({
   q: z.string().trim().max(100).optional(),
   status: z.enum(memberStatusEnum.enumValues).optional(),
   dojoId: z.string().uuid().optional(),
+  rankLevel: z.coerce.number().int().min(1).max(12).optional(),
   sortBy: z.enum(memberSortKeys).default('name'),
   sortDir: z.enum(memberSortDirections).default('asc'),
 });

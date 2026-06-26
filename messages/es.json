@@ -322,6 +322,7 @@
   "nav": {
     "dashboard": "Inicio",
     "finances": "Finanzas",
+    "financeOverview": "Resumen",
     "staff": "Staff",
     "members": "Alumnos",
     "clients": "Clientes",
@@ -376,8 +377,7 @@
     "kpis": {
       "members": "Miembros activos",
       "classesToday": "Clases hoy",
-      "attendanceWeek": "Asistencia esta semana",
-      "revenueMonth": "Ingresos del mes"
+      "attendanceWeek": "Asistencia esta semana"
     },
     "birthdays": {
       "title": "Cumpleaños de alumnos",
@@ -387,6 +387,26 @@
       "emptyCurrent": "No hay cumpleaños registrados este mes.",
       "emptyNext": "No hay cumpleaños registrados el próximo mes.",
       "openMember": "Ver información de {name}"
+    },
+    "rankDistribution": {
+      "title": "Distribución por grado",
+      "subtitle": "Alumnos activos agrupados por su rango actual.",
+      "empty": "Aún no hay grados asignados a alumnos activos.",
+      "percent": "{percent}% de los alumnos",
+      "segmentLabel": "{rank}: {count, plural, one {# alumno} other {# alumnos}}, {percent}% de los alumnos"
+    }
+  },
+  "finance": {
+    "title": "Finanzas",
+    "subtitle": "Resumen financiero de la organización según tu alcance de acceso.",
+    "kpis": {
+      "revenueMonth": "Ingresos del mes",
+      "revenueMonthDetail": "Pagos registrados desde el inicio del mes"
+    },
+    "overview": {
+      "title": "Operación financiera",
+      "subtitle": "Los módulos de caja, mensualidades, reportes, cortes y gastos viven dentro de Finanzas.",
+      "body": "Este resumen concentra los indicadores financieros principales antes de abrir las vistas operativas."
     }
   },
   "loading": {
@@ -406,6 +426,7 @@
       "searchPlaceholder": "Buscar por nombre o código",
       "filterStatusAll": "Todos los estados",
       "filterDojoAll": "Todos los dojos",
+      "filterRankAll": "Todos los grados",
       "empty": "Aún no hay miembros. Agrega el primero.",
       "emptyRank": "Sin grado",
       "emptyAge": "—",
@@ -610,17 +631,21 @@
     "save": "Guardar clase",
     "created": "Clase creada",
     "openDetail": "Ver detalle de clase {name}",
+    "emptyRoom": "Sin salón",
     "studentCount": "{count, plural, =0 {0 alumnos} one {# alumno} other {# alumnos}}",
     "capacityValue": "{count}/{capacity} alumnos",
     "columns": {
       "schedule": "Horario",
       "name": "Clase",
       "dojo": "Dojo",
+      "room": "Salón",
       "students": "Alumnos"
     },
     "form": {
       "name": "Nombre",
       "dojo": "Dojo",
+      "room": "Salón",
+      "roomNone": "Sin salón asignado",
       "days": "Días",
       "startTime": "Inicio",
       "endTime": "Fin",
@@ -633,6 +658,7 @@
       "validationFailed": "Revisa los datos del formulario.",
       "notFound": "No encontramos la clase.",
       "invalidDojo": "Selecciona un dojo válido.",
+      "invalidRoom": "Selecciona un salón válido.",
       "invalidClass": "Selecciona una clase válida.",
       "invalidMember": "Selecciona un alumno válido.",
       "dojoMismatch": "La clase debe pertenecer al dojo del alumno."
@@ -648,6 +674,7 @@
       "roster": "Alumnos asignados",
       "emptyRoster": "Esta clase aún no tiene alumnos asignados.",
       "emptyRank": "Sin grado",
+      "emptyRoom": "Sin salón",
       "assign": "Asignar alumno",
       "remove": "Quitar",
       "assigned": "Alumno asignado",
@@ -661,9 +688,42 @@
         "validationFailed": "Revisa los datos.",
         "notFound": "No encontramos la clase.",
         "invalidDojo": "Selecciona un dojo válido.",
+        "invalidRoom": "Selecciona un salón válido.",
         "invalidClass": "Selecciona una clase válida.",
         "invalidMember": "Selecciona un alumno válido.",
         "dojoMismatch": "La clase debe pertenecer al dojo del alumno."
+      }
+    }
+  },
+  "rooms": {
+    "title": "Salones",
+    "subtitle": "Espacios físicos por dojo para organizar horarios, cupos y clases.",
+    "empty": "Aún no hay salones registrados.",
+    "emptyCapacity": "Sin cupo",
+    "classCount": "{count, plural, =0 {0 clases} one {# clase} other {# clases}}",
+    "columns": {
+      "room": "Salón",
+      "dojo": "Dojo",
+      "capacity": "Cupo",
+      "classes": "Clases",
+      "status": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "detail": {
+      "back": "Volver a salones",
+      "capacityValue": "Cupo para {capacity} alumnos",
+      "emptyCapacity": "Sin cupo registrado",
+      "classesTitle": "Clases asignadas",
+      "classCount": "{count, plural, =0 {0 clases asignadas} one {# clase asignada} other {# clases asignadas}}",
+      "emptyClasses": "Este salón aún no tiene clases asignadas.",
+      "notes": "Notas",
+      "columns": {
+        "schedule": "Horario",
+        "class": "Clase",
+        "capacity": "Cupo"
       }
     }
   },

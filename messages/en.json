@@ -322,6 +322,7 @@
   "nav": {
     "dashboard": "Home",
     "finances": "Finance",
+    "financeOverview": "Summary",
     "staff": "Staff",
     "members": "Members",
     "clients": "Clients",
@@ -376,8 +377,7 @@
     "kpis": {
       "members": "Active members",
       "classesToday": "Classes today",
-      "attendanceWeek": "Attendance this week",
-      "revenueMonth": "Revenue this month"
+      "attendanceWeek": "Attendance this week"
     },
     "birthdays": {
       "title": "Student birthdays",
@@ -387,6 +387,26 @@
       "emptyCurrent": "No birthdays registered this month.",
       "emptyNext": "No birthdays registered next month.",
       "openMember": "View information for {name}"
+    },
+    "rankDistribution": {
+      "title": "Rank distribution",
+      "subtitle": "Active students grouped by current rank.",
+      "empty": "No active students have assigned ranks yet.",
+      "percent": "{percent}% of students",
+      "segmentLabel": "{rank}: {count, plural, one {# student} other {# students}}, {percent}% of students"
+    }
+  },
+  "finance": {
+    "title": "Finance",
+    "subtitle": "Financial summary for your access scope.",
+    "kpis": {
+      "revenueMonth": "Revenue this month",
+      "revenueMonthDetail": "Payments registered since the start of the month"
+    },
+    "overview": {
+      "title": "Financial operations",
+      "subtitle": "Cash register, payments, reports, cutoffs, and expenses live under Finance.",
+      "body": "This summary concentrates the main financial indicators before opening operational views."
     }
   },
   "loading": {
@@ -406,6 +426,7 @@
       "searchPlaceholder": "Search by name or code",
       "filterStatusAll": "All statuses",
       "filterDojoAll": "All dojos",
+      "filterRankAll": "All ranks",
       "empty": "No members yet. Add the first one.",
       "emptyRank": "No rank",
       "emptyAge": "—",
@@ -610,17 +631,21 @@
     "save": "Save class",
     "created": "Class created",
     "openDetail": "View class details for {name}",
+    "emptyRoom": "No room",
     "studentCount": "{count, plural, =0 {0 students} one {# student} other {# students}}",
     "capacityValue": "{count}/{capacity} students",
     "columns": {
       "schedule": "Schedule",
       "name": "Class",
       "dojo": "Dojo",
+      "room": "Room",
       "students": "Students"
     },
     "form": {
       "name": "Name",
       "dojo": "Dojo",
+      "room": "Room",
+      "roomNone": "No assigned room",
       "days": "Days",
       "startTime": "Start",
       "endTime": "End",
@@ -633,6 +658,7 @@
       "validationFailed": "Review the form data.",
       "notFound": "We could not find this class.",
       "invalidDojo": "Select a valid dojo.",
+      "invalidRoom": "Select a valid room.",
       "invalidClass": "Select a valid class.",
       "invalidMember": "Select a valid member.",
       "dojoMismatch": "The class must belong to the student's dojo."
@@ -648,6 +674,7 @@
       "roster": "Assigned students",
       "emptyRoster": "This class has no assigned students yet.",
       "emptyRank": "No rank",
+      "emptyRoom": "No room",
       "assign": "Assign student",
       "remove": "Remove",
       "assigned": "Student assigned",
@@ -661,9 +688,42 @@
         "validationFailed": "Review the data.",
         "notFound": "We could not find this class.",
         "invalidDojo": "Select a valid dojo.",
+        "invalidRoom": "Select a valid room.",
         "invalidClass": "Select a valid class.",
         "invalidMember": "Select a valid member.",
         "dojoMismatch": "The class must belong to the student's dojo."
+      }
+    }
+  },
+  "rooms": {
+    "title": "Rooms",
+    "subtitle": "Physical spaces by dojo for schedules, capacity, and classes.",
+    "empty": "No rooms are registered yet.",
+    "emptyCapacity": "No capacity",
+    "classCount": "{count, plural, =0 {0 classes} one {# class} other {# classes}}",
+    "columns": {
+      "room": "Room",
+      "dojo": "Dojo",
+      "capacity": "Capacity",
+      "classes": "Classes",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "detail": {
+      "back": "Back to rooms",
+      "capacityValue": "Capacity for {capacity} students",
+      "emptyCapacity": "No capacity registered",
+      "classesTitle": "Assigned classes",
+      "classCount": "{count, plural, =0 {0 assigned classes} one {# assigned class} other {# assigned classes}}",
+      "emptyClasses": "This room has no assigned classes yet.",
+      "notes": "Notes",
+      "columns": {
+        "schedule": "Schedule",
+        "class": "Class",
+        "capacity": "Capacity"
       }
     }
   },

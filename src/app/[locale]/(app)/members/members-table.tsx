@@ -28,6 +28,7 @@ interface Props {
   total: number;
   query: MemberListQuery;
   dojos: Array<{ id: string; name: string }>;
+  ranks: ReadonlyArray<{ level: number; name: string }>;
 }
 
 const FIELD =
@@ -35,7 +36,7 @@ const FIELD =
 
 const PAGE_SIZE_OPTIONS = [20, 40, 60, 80, 100] as const;
 
-export default function MembersTable({ rows, total, query, dojos }: Props) {
+export default function MembersTable({ rows, total, query, dojos, ranks }: Props) {
   const t = useTranslations('members.list');
   const tLoading = useTranslations('loading');
   const router = useRouter();
@@ -78,6 +79,7 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
         ...(next.q ? { q: next.q } : {}),
         ...(next.status ? { status: next.status } : {}),
         ...(next.dojoId ? { dojoId: next.dojoId } : {}),
+        ...(next.rankLevel ? { rankLevel: String(next.rankLevel) } : {}),
         sortBy: next.sortBy ?? 'name',
         sortDir: next.sortDir ?? 'asc',
         page: String(next.page ?? 1),
@@ -86,12 +88,12 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
     } as never;
   }
 
-  function applyParam(key: 'q' | 'status' | 'dojoId', value: string | undefined) {
+  function applyParam(key: 'q' | 'status' | 'dojoId' | 'rankLevel', value: string | undefined) {
     startTransition(() => {
       router.push(
         buildHref({
           page: 1,
-          [key]: value && value !== '' ? value : undefined,
+          [key]: value && value !== '' ? (key === 'rankLevel' ? Number(value) : value) : undefined,
         } as Partial<MemberListQuery>),
       );
     });
@@ -155,6 +157,10 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
     { value: '', label: t('filterDojoAll') },
     ...dojos.map((dojo) => ({ value: dojo.id, label: dojo.name })),
   ];
+  const rankOptions = [
+    { value: '', label: t('filterRankAll') },
+    ...ranks.map((rank) => ({ value: String(rank.level), label: rank.name })),
+  ];
   const pageSizeOptions = PAGE_SIZE_OPTIONS.map((value) => ({
     value: String(value),
     label: String(value),
@@ -200,6 +206,15 @@ export default function MembersTable({ rows, total, query, dojos }: Props) {
           className="w-full md:w-[14rem] lg:w-[15rem]"
           contentMinWidth="14rem"
           ariaLabel={t('columns.dojo')}
+        />
+        <SelectMenu
+          value={query.rankLevel ? String(query.rankLevel) : ''}
+          options={rankOptions}
+          onValueChange={(value) => applyParam('rankLevel', value || undefined)}
+          disabled={!hydrated || pending}
+          className="w-full md:w-[13rem] lg:w-[14rem]"
+          contentMinWidth="13rem"
+          ariaLabel={t('columns.rank')}
         />
         <SelectMenu
           value={String(query.pageSize)}

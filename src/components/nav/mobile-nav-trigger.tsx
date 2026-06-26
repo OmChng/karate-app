@@ -9,7 +9,13 @@ import { SidebarSheetContent } from './sidebar';
 /**
  * Hamburger button for phones (<md). The labeled sidebar at md+ replaces it.
  */
-export function MobileNavTrigger({ userName }: { userName?: string | null }) {
+export function MobileNavTrigger({
+  userName,
+  canViewFinance = false,
+}: {
+  userName?: string | null;
+  canViewFinance?: boolean;
+}) {
   const t = useTranslations('nav');
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -39,7 +45,11 @@ export function MobileNavTrigger({ userName }: { userName?: string | null }) {
           <div className="brand-mark h-7 w-7 rounded-md" aria-hidden />
           <span className="font-semibold tracking-tight">GOJU-KAN</span>
         </div>
-        <SidebarSheetContent user={{ name: userName }} onNavigate={() => setOpen(false)} />
+        <SidebarSheetContent
+          user={{ name: userName }}
+          canViewFinance={canViewFinance}
+          onNavigate={() => setOpen(false)}
+        />
       </SheetContent>
     </Sheet>
   );

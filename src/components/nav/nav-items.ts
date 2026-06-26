@@ -14,6 +14,7 @@ import {
 export type NavKey =
   | 'dashboard'
   | 'finances'
+  | 'financeOverview'
   | 'staff'
   | 'members'
   | 'clients'
@@ -39,6 +40,7 @@ export type NavKey =
 
 export type NavHref =
   | '/app'
+  | '/finances'
   | '/instructors'
   | '/members'
   | '/clients'
@@ -81,6 +83,7 @@ export const PRIMARY_NAV: NavItem[] = [
 ];
 
 export const FINANCE_NAV: NavItem[] = [
+  { href: '/finances', key: 'financeOverview', Icon: Receipt },
   { href: '/plans', key: 'plans', Icon: Receipt },
   { href: '/reports', key: 'reports', Icon: Trophy },
   { href: '/cash-register', key: 'cashRegister', Icon: Receipt },
@@ -101,9 +104,65 @@ export const BOTTOM_NAV: NavItem[] = [
   { href: '/instructors', key: 'staff', Icon: Trophy },
 ];
 
+const SPANISH_NAV_PATHS: Record<NavHref, string> = {
+  '/app': '/app',
+  '/finances': '/app/finanzas',
+  '/instructors': '/app/personal',
+  '/members': '/app/miembros',
+  '/clients': '/app/clientes',
+  '/rooms': '/app/salones',
+  '/classes': '/app/clases',
+  '/samples': '/app/pruebas',
+  '/exams': '/app/examenes',
+  '/black-belts': '/app/cintas-negras',
+  '/plans': '/app/planes',
+  '/reports': '/app/reporte',
+  '/cash-register': '/app/cajas',
+  '/payments': '/app/mensualidades',
+  '/cutoff': '/app/corte',
+  '/expenses': '/app/gastos',
+  '/inventory': '/app/inventario',
+  '/attendance': '/app/pase-de-lista',
+  '/ranks': '/app/rangos',
+  '/dojos': '/app/dojos',
+  '/events': '/app/eventos',
+  '/announcements': '/app/anuncios',
+  '/settings': '/app/configuracion',
+};
+
+const ENGLISH_APP_NAV_PATHS: Record<NavHref, string> = {
+  '/app': '/app',
+  '/finances': '/app/finances',
+  '/instructors': '/app/instructors',
+  '/members': '/app/members',
+  '/clients': '/app/clients',
+  '/rooms': '/app/rooms',
+  '/classes': '/app/classes',
+  '/samples': '/app/samples',
+  '/exams': '/app/exams',
+  '/black-belts': '/app/black-belts',
+  '/plans': '/app/plans',
+  '/reports': '/app/reports',
+  '/cash-register': '/app/cash-register',
+  '/payments': '/app/payments',
+  '/cutoff': '/app/cutoff',
+  '/expenses': '/app/expenses',
+  '/inventory': '/app/inventory',
+  '/attendance': '/app/attendance',
+  '/ranks': '/app/ranks',
+  '/dojos': '/app/dojos',
+  '/events': '/app/events',
+  '/announcements': '/app/announcements',
+  '/settings': '/app/settings',
+};
+
 export function isActive(pathname: string, href: NavHref): boolean {
   // strip leading locale segment for comparison
   const stripped = pathname.replace(/^\/(?:en|es)(?=\/|$)/, '') || '/';
   if (href === '/app') return stripped === '/app';
-  return stripped === href || stripped.startsWith(href + '/');
+  const spanishPath = SPANISH_NAV_PATHS[href];
+  const englishAppPath = ENGLISH_APP_NAV_PATHS[href];
+  return [href, spanishPath, englishAppPath].some(
+    (candidate) => stripped === candidate || stripped.startsWith(candidate + '/'),
+  );
 }

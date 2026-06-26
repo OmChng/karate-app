@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useTransition, type FormEvent, type KeyboardEvent } from 'react';
+import { useMemo, useState, useTransition, type FormEvent, type KeyboardEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -22,7 +22,10 @@ import { cn } from '@/lib/utils';
 interface ClassRow {
   id: string;
   name: string;
+  dojoId: string;
   dojoName: string;
+  roomId: string | null;
+  roomName: string | null;
   scheduleLabel: string;
   capacity: number | null;
   activeMembers: number;
@@ -32,6 +35,7 @@ interface ClassRow {
 interface Props {
   classes: ClassRow[];
   dojos: Array<{ id: string; name: string }>;
+  rooms: Array<{ id: string; dojoId: string; dojoName: string; name: string }>;
 }
 
 const BUTTON_BASE =
@@ -40,7 +44,7 @@ const INPUT_CLASS =
   'min-h-11 rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 const DAYS = ['L', 'M', 'Mi', 'J', 'V', 'S', 'D'] as const;
 
-export default function ClassesClient({ classes, dojos }: Props) {
+export default function ClassesClient({ classes, dojos, rooms }: Props) {
   const t = useTranslations('classes');
   const router = useRouter();
 
@@ -61,7 +65,7 @@ export default function ClassesClient({ classes, dojos }: Props) {
           <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">{t('subtitle')}</p>
         </div>
-        <CreateClassSheet dojos={dojos} />
+        <CreateClassSheet dojos={dojos} rooms={rooms} />
       </header>
 
       <section className={panelShellClass}>
@@ -83,6 +87,9 @@ export default function ClassesClient({ classes, dojos }: Props) {
                   </th>
                   <th scope="col" className={tableHeaderCellClass}>
                     {t('columns.dojo')}
+                  </th>
+                  <th scope="col" className={tableHeaderCellClass}>
+                    {t('columns.room')}
                   </th>
                   <th scope="col" className={tableHeaderCellClass}>
                     {t('columns.students')}
@@ -110,6 +117,7 @@ export default function ClassesClient({ classes, dojos }: Props) {
                       </span>
                     </td>
                     <td className="px-4 py-3">{classRow.dojoName}</td>
+                    <td className="px-4 py-3">{classRow.roomName ?? t('emptyRoom')}</td>
                     <td className="px-4 py-3 tabular-nums">
                       {classRow.capacity
                         ? t('capacityValue', {
@@ -129,11 +137,16 @@ export default function ClassesClient({ classes, dojos }: Props) {
   );
 }
 
-function CreateClassSheet({ dojos }: { dojos: Props['dojos'] }) {
+function CreateClassSheet({ dojos, rooms }: { dojos: Props['dojos']; rooms: Props['rooms'] }) {
   const t = useTranslations('classes');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [selectedDojoId, setSelectedDojoId] = useState(dojos[0]?.id ?? '');
+  const availableRooms = useMemo(
+    () => rooms.filter((room) => room.dojoId === selectedDojoId),
+    [rooms, selectedDojoId],
+  );
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -144,6 +157,7 @@ function CreateClassSheet({ dojos }: { dojos: Props['dojos'] }) {
       const res = await createClassAction({
         name: String(formData.get('name') ?? ''),
         dojoId: String(formData.get('dojoId') ?? ''),
+        roomId: String(formData.get('roomId') ?? '') || undefined,
         days: formData.getAll('days').map(String) as Array<(typeof DAYS)[number]>,
         startTime: String(formData.get('startTime') ?? ''),
         endTime: String(formData.get('endTime') ?? ''),
@@ -187,10 +201,27 @@ function CreateClassSheet({ dojos }: { dojos: Props['dojos'] }) {
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             {t('form.dojo')}
-            <NativeSelect name="dojoId" wrapperClassName="w-full" required>
+            <NativeSelect
+              name="dojoId"
+              wrapperClassName="w-full"
+              value={selectedDojoId}
+              onChange={(event) => setSelectedDojoId(event.currentTarget.value)}
+              required
+            >
               {dojos.map((dojo) => (
                 <option key={dojo.id} value={dojo.id}>
                   {dojo.name}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            {t('form.room')}
+            <NativeSelect name="roomId" wrapperClassName="w-full">
+              <option value="">{t('form.roomNone')}</option>
+              {availableRooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
                 </option>
               ))}
             </NativeSelect>

@@ -43,6 +43,13 @@
       "when": 1781884579374,
       "tag": "0005_member_katakana",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782518400000,
+      "tag": "0006_rooms",
+      "breakpoints": true
     }
   ]
 }

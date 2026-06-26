@@ -7,7 +7,7 @@ import { auditLog, classes, memberClassAssignments, members } from '@/db/schema'
 import { classDateFromTime } from '@/lib/class-schedule';
 import { auth } from '@/lib/auth';
 import { getRoleAccessScope, requireRole, type RoleAccessScope } from '@/lib/rbac';
-import { getActiveDojoForAccess } from '@/server/access';
+import { getActiveDojoForAccess, getActiveRoomForAccess } from '@/server/access';
 import {
   classAssignmentInputSchema,
   classIdSchema,
@@ -22,6 +22,7 @@ export type ClassActionErrorCode =
   | 'validationFailed'
   | 'notFound'
   | 'invalidDojo'
+  | 'invalidRoom'
   | 'invalidClass'
   | 'invalidMember'
   | 'dojoMismatch';
@@ -99,12 +100,17 @@ export async function createClassAction(
 
   const dojo = await getActiveDojoForAccess(accessScope, v.dojoId);
   if (!dojo) return { ok: false, error: 'invalidDojo' };
+  const room = v.roomId ? await getActiveRoomForAccess(accessScope, v.roomId) : null;
+  if (v.roomId && (!room || room.dojoId !== dojo.id)) {
+    return { ok: false, error: 'invalidRoom' };
+  }
 
   const [row] = await db
     .insert(classes)
     .values({
       organizationId: dojo.organizationId,
       dojoId: dojo.id,
+      roomId: room?.id ?? null,
       name: v.name,
       startsAt: classDateFromTime(v.startTime),
       endsAt: classDateFromTime(v.endTime),
@@ -123,8 +129,8 @@ export async function createClassAction(
     after: v as unknown as Record<string, unknown>,
   });
 
+  revalidatePath('/app/clases');
   revalidatePath('/classes');
-  revalidatePath('/clases');
   return { ok: true, data: { id: row!.id } };
 }
 
@@ -153,6 +159,10 @@ export async function updateClassAction(
 
   const dojo = await getActiveDojoForAccess(accessScope, v.dojoId);
   if (!dojo) return { ok: false, error: 'invalidDojo' };
+  const room = v.roomId ? await getActiveRoomForAccess(accessScope, v.roomId) : null;
+  if (v.roomId && (!room || room.dojoId !== dojo.id)) {
+    return { ok: false, error: 'invalidRoom' };
+  }
 
   const [before] = await db
     .select()
@@ -165,6 +175,7 @@ export async function updateClassAction(
     .set({
       organizationId: dojo.organizationId,
       dojoId: dojo.id,
+      roomId: room?.id ?? null,
       name: v.name,
       startsAt: classDateFromTime(v.startTime),
       endsAt: classDateFromTime(v.endTime),
@@ -185,10 +196,10 @@ export async function updateClassAction(
     after: v as unknown as Record<string, unknown>,
   });
 
+  revalidatePath('/app/clases');
   revalidatePath('/classes');
-  revalidatePath('/clases');
+  revalidatePath(`/app/clases/${id}`);
   revalidatePath(`/classes/${id}`);
-  revalidatePath(`/clases/${id}`);
   return { ok: true, data: { id } };
 }
 
@@ -228,10 +239,10 @@ export async function softDeleteClassAction(id: string): Promise<ClassActionResu
     });
   });
 
+  revalidatePath('/app/clases');
   revalidatePath('/classes');
-  revalidatePath('/clases');
+  revalidatePath(`/app/clases/${id}`);
   revalidatePath(`/classes/${id}`);
-  revalidatePath(`/clases/${id}`);
   return { ok: true };
 }
 
@@ -295,9 +306,10 @@ export async function assignMemberToClassAction(
     after: v,
   });
 
+  revalidatePath('/app/clases');
+  revalidatePath(`/app/clases/${classRow.id}`);
+  revalidatePath(`/app/miembros/${member.id}`);
   revalidatePath('/classes');
-  revalidatePath(`/classes/${classRow.id}`);
-  revalidatePath(`/members/${member.id}`);
   return { ok: true };
 }
 
@@ -351,8 +363,9 @@ export async function endMemberClassAssignmentAction(
     after: input,
   });
 
+  revalidatePath('/app/clases');
+  revalidatePath(`/app/clases/${classRow.id}`);
+  revalidatePath(`/app/miembros/${member.id}`);
   revalidatePath('/classes');
-  revalidatePath(`/classes/${classRow.id}`);
-  revalidatePath(`/members/${member.id}`);
   return { ok: true };
 }
