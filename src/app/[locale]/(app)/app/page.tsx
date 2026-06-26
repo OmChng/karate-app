@@ -1,10 +1,10 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { auth } from '@/lib/auth';
-import { currentOrganizationId, hasRole } from '@/lib/rbac';
+import { getRoleAccessScope, isRoleAccessScopeEmpty, type RoleAccessScope } from '@/lib/rbac';
 import { db } from '@/db/client';
 import { members, classes, attendance, payments } from '@/db/schema';
 import { formatCurrency } from '@/lib/utils';
@@ -26,11 +26,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   setRequestLocale(locale);
   const session = await auth();
   const t = await getTranslations('dashboard');
-  const orgId = currentOrganizationId(session);
-  if (
-    !orgId ||
-    !hasRole(session, ['organization_admin', 'dojo_admin'], { organizationId: orgId })
-  ) {
+  const accessScope = getRoleAccessScope(session, [
+    'organization_admin',
+    'dojo_admin',
+    'instructor',
+  ]);
+  if (isRoleAccessScopeEmpty(accessScope)) {
     notFound();
   }
 
@@ -47,7 +48,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const currentMonthLabel = monthLabel(currentMonth, locale);
   const nextMonthLabel = monthLabel(nextMonth, locale);
 
-  if (orgId) {
+  {
     const start = new Date(today);
     start.setHours(0, 0, 0, 0);
     const end = new Date(start);
@@ -61,55 +62,60 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     const endIso = end.toISOString();
     const weekAgoIso = weekAgo.toISOString();
     const monthStartIso = monthStart.toISOString();
+    const memberAccessFilter = memberAccessPredicate(accessScope);
+    const classAccessFilter = classAccessPredicate(accessScope);
+    const paymentAccessFilter = paymentAccessPredicate(accessScope);
 
+    const memberCountFilters: SQL[] = [eq(members.status, 'active'), isNull(members.deletedAt)];
+    if (memberAccessFilter) memberCountFilters.push(memberAccessFilter);
     const [m] = await db
       .select({ c: count() })
       .from(members)
-      .where(
-        and(
-          eq(members.organizationId, orgId),
-          eq(members.status, 'active'),
-          isNull(members.deletedAt),
-        ),
-      );
+      .where(and(...memberCountFilters));
     memberCount = m?.c ?? 0;
 
+    const classesTodayFilters: SQL[] = [
+      sql`${classes.startsAt} >= ${startIso}::timestamptz`,
+      sql`${classes.startsAt} < ${endIso}::timestamptz`,
+      isNull(classes.deletedAt),
+    ];
+    if (classAccessFilter) classesTodayFilters.push(classAccessFilter);
     const [c] = await db
       .select({ c: count() })
       .from(classes)
-      .where(
-        and(
-          eq(classes.organizationId, orgId),
-          sql`${classes.startsAt} >= ${startIso}::timestamptz`,
-          sql`${classes.startsAt} < ${endIso}::timestamptz`,
-        ),
-      );
+      .where(and(...classesTodayFilters));
     classesToday = c?.c ?? 0;
 
+    const attendanceFilters: SQL[] = [
+      sql`${attendance.markedAt} >= ${weekAgoIso}::timestamptz`,
+      eq(attendance.status, 'present'),
+      isNull(classes.deletedAt),
+    ];
+    if (classAccessFilter) attendanceFilters.push(classAccessFilter);
     const [a] = await db
       .select({ c: count() })
       .from(attendance)
       .innerJoin(classes, eq(classes.id, attendance.classId))
-      .where(
-        and(
-          eq(classes.organizationId, orgId),
-          sql`${attendance.markedAt} >= ${weekAgoIso}::timestamptz`,
-          eq(attendance.status, 'present'),
-        ),
-      );
+      .where(and(...attendanceFilters));
     attendanceWeek = a?.c ?? 0;
 
+    const revenueFilters: SQL[] = [
+      sql`${payments.paidAt} >= ${monthStartIso}::timestamptz`,
+      isNull(payments.deletedAt),
+    ];
+    if (paymentAccessFilter) revenueFilters.push(paymentAccessFilter);
     const [r] = await db
       .select({ total: sql<string>`COALESCE(SUM(${payments.amount})::text, '0')` })
       .from(payments)
-      .where(
-        and(
-          eq(payments.organizationId, orgId),
-          sql`${payments.paidAt} >= ${monthStartIso}::timestamptz`,
-        ),
-      );
+      .where(and(...revenueFilters));
     revenueMonth = Number(r?.total ?? 0);
 
+    const birthdayFilters: SQL[] = [
+      isNull(members.deletedAt),
+      sql`${members.dateOfBirth} is not null`,
+      sql`extract(month from ${members.dateOfBirth})::int in (${currentMonth}, ${nextMonth})`,
+    ];
+    if (memberAccessFilter) birthdayFilters.push(memberAccessFilter);
     const birthdayRows = await db
       .select({
         id: members.id,
@@ -120,14 +126,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         birthDay: sql<number>`extract(day from ${members.dateOfBirth})::int`,
       })
       .from(members)
-      .where(
-        and(
-          eq(members.organizationId, orgId),
-          isNull(members.deletedAt),
-          sql`${members.dateOfBirth} is not null`,
-          sql`extract(month from ${members.dateOfBirth})::int in (${currentMonth}, ${nextMonth})`,
-        ),
-      );
+      .where(and(...birthdayFilters));
 
     const birthdayMembers = birthdayRows
       .filter((member): member is BirthdayMember => Boolean(member.dateOfBirth))
@@ -195,6 +194,54 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       </section>
     </div>
   );
+}
+
+function memberAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(members.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(members.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
+}
+
+function classAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(classes.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(classes.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
+}
+
+function paymentAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(payments.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(payments.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
 }
 
 interface BirthdayMember {

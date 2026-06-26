@@ -1,11 +1,9 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { and, eq, isNull } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { currentOrganizationId, hasRole } from '@/lib/rbac';
-import { db } from '@/db/client';
-import { dojos } from '@/db/schema';
-import { getMemberById } from '@/server/members/queries';
+import { getRoleAccessScope, isRoleAccessScopeEmpty } from '@/lib/rbac';
+import { listDojosForAccess } from '@/server/access';
+import { getMemberByIdForAccess } from '@/server/members/queries';
 import MemberForm from '../../member-form';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -23,21 +21,15 @@ export default async function EditMemberPage({
   setRequestLocale(locale);
   const t = await getTranslations('members.form');
   const session = await auth();
-  const orgId = currentOrganizationId(session);
-  if (
-    !orgId ||
-    !hasRole(session, ['organization_admin', 'dojo_admin'], { organizationId: orgId })
-  ) {
+  const accessScope = getRoleAccessScope(session, ['organization_admin', 'dojo_admin']);
+  if (isRoleAccessScopeEmpty(accessScope)) {
     notFound();
   }
 
-  const m = await getMemberById(orgId, id);
+  const m = await getMemberByIdForAccess(accessScope, id);
   if (!m) notFound();
 
-  const dojoOptions = await db
-    .select({ id: dojos.id, name: dojos.name })
-    .from(dojos)
-    .where(and(eq(dojos.organizationId, orgId), isNull(dojos.deletedAt)));
+  const dojoOptions = await listDojosForAccess(accessScope);
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">

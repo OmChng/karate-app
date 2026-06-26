@@ -1,11 +1,9 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { eq, isNull, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
-import { currentOrganizationId, hasRole } from '@/lib/rbac';
-import { db } from '@/db/client';
-import { dojos } from '@/db/schema';
-import { getMemberById, getMemberDetailData } from '@/server/members/queries';
+import { getRoleAccessScope, isRoleAccessScopeEmpty, scopeCanAccessDojo } from '@/lib/rbac';
+import { listDojosForAccess } from '@/server/access';
+import { getMemberByIdForAccess, getMemberDetailDataForAccess } from '@/server/members/queries';
 import MemberDetailClient from './member-detail-client';
 
 export async function generateMetadata({
@@ -16,14 +14,15 @@ export async function generateMetadata({
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: 'members.detail' });
   const session = await auth();
-  const orgId = currentOrganizationId(session);
-  if (
-    !orgId ||
-    !hasRole(session, ['organization_admin', 'dojo_admin'], { organizationId: orgId })
-  ) {
+  const accessScope = getRoleAccessScope(session, [
+    'organization_admin',
+    'dojo_admin',
+    'instructor',
+  ]);
+  if (isRoleAccessScopeEmpty(accessScope)) {
     return { title: t('fallbackTitle') };
   }
-  const m = await getMemberById(orgId, id);
+  const m = await getMemberByIdForAccess(accessScope, id);
   if (!m) return { title: t('fallbackTitle') };
   return { title: `${m.firstName} ${m.lastName}` };
 }
@@ -36,20 +35,27 @@ export default async function MemberDetailPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const session = await auth();
-  const orgId = currentOrganizationId(session);
-  if (
-    !orgId ||
-    !hasRole(session, ['organization_admin', 'dojo_admin'], { organizationId: orgId })
-  ) {
+  const accessScope = getRoleAccessScope(session, [
+    'organization_admin',
+    'dojo_admin',
+    'instructor',
+  ]);
+  if (isRoleAccessScopeEmpty(accessScope)) {
     notFound();
   }
-  const data = await getMemberDetailData(orgId, id);
+  const data = await getMemberDetailDataForAccess(accessScope, id);
   if (!data) notFound();
 
-  const dojoOptions = await db
-    .select({ id: dojos.id, name: dojos.name })
-    .from(dojos)
-    .where(and(eq(dojos.organizationId, orgId), isNull(dojos.deletedAt)));
+  const adminScope = getRoleAccessScope(session, ['organization_admin', 'dojo_admin']);
+  const instructorScope = getRoleAccessScope(session, [
+    'organization_admin',
+    'dojo_admin',
+    'instructor',
+  ]);
+  const memberDojo = { id: data.member.dojoId, organizationId: data.member.organizationId };
+  const canManageMember = scopeCanAccessDojo(adminScope, memberDojo);
+  const canManageClasses = scopeCanAccessDojo(instructorScope, memberDojo);
+  const dojoOptions = await listDojosForAccess(adminScope);
 
   return (
     <MemberDetailClient
@@ -60,6 +66,11 @@ export default async function MemberDetailPage({
       promotions={data.promotions}
       blackBeltLeagueResults={data.blackBeltLeagueResults}
       rankOptions={data.rankOptions}
+      canEditMember={canManageMember}
+      canTransferMember={canManageMember}
+      canUpdateStatus={canManageMember}
+      canPromote={canManageClasses}
+      canManageClasses={canManageClasses}
     />
   );
 }

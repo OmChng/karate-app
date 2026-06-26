@@ -1,5 +1,5 @@
 /**
- * Seeds the database with a small demo org for local development.
+ * Seeds the database with Gojukan demo data for local development.
  *
  * Idempotent: re-running won't duplicate rows.
  * Refuses to run in production.
@@ -7,8 +7,8 @@
  * Usage: pnpm db:seed
  */
 import { config as loadDotenv } from 'dotenv';
-loadDotenv({ path: '.env.local' });
-loadDotenv();
+loadDotenv({ path: '.env.local', quiet: true });
+loadDotenv({ quiet: true });
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, sql } from 'drizzle-orm';
@@ -28,6 +28,8 @@ import {
   payments,
   files,
 } from '../src/db/schema';
+import type { UserRole } from '../src/db/schema';
+import { katakanaForFirstName } from '../src/lib/katakana';
 import { rankCatalog } from '../src/lib/rank-catalog';
 
 if (process.env.NODE_ENV === 'production') {
@@ -44,8 +46,296 @@ async function hash(pw: string) {
   return argon2.hash(pw, { type: argon2.argon2id });
 }
 
+const BOSQUES_KEY = 'bosquesSantaAnita';
+const MIN_STUDENTS_PER_ACADEMY = 60;
+const DEFAULT_STUDENTS_PER_ACADEMY = 80;
+const MAX_STUDENTS_PER_ACADEMY = 100;
+
+const SEEDED_ACADEMIES = [
+  {
+    key: BOSQUES_KEY,
+    code: 'BSA',
+    sourceId: '32',
+    area: 'Jalisco',
+    name: 'Bosques de Santa Anita',
+    address:
+      'Boulevard Bosques de Santa Anita 2355-28, San Agustín, 45643 Tlajomulco de Zúñiga, Jal.',
+    lat: 20.571194104695888,
+    lng: -103.49416761616162,
+    phone: '3313423048',
+    whatsapp: '3313423048',
+  },
+  {
+    key: 'bugambilias',
+    code: 'BUG',
+    sourceId: '24',
+    area: 'Zapopan',
+    name: 'Bugambilias',
+    address: 'Av. Lorenzo Barcelata 513 Int. 4, Valle de Bugambilias, 45237 Zapopan, Jal.',
+    lat: 20.608971250867985,
+    lng: -103.4485284519446,
+    phone: '3330778952',
+    whatsapp: '3330778952',
+  },
+  {
+    key: 'lasAguilas',
+    code: 'AGU',
+    sourceId: '18',
+    area: 'Zapopan',
+    name: 'Las Águilas',
+    address: 'Av. Sierra de Mazamitla 5733, Pinar de la Calma, 45080 Zapopan, Jal.',
+    lat: 20.62322366268819,
+    lng: -103.41526651928667,
+    phone: '3336347906',
+    whatsapp: '3333925394',
+  },
+  {
+    key: 'sanAgustin',
+    code: 'SAG',
+    sourceId: '17',
+    area: 'Tlajomulco de Zúñiga',
+    name: 'San Agustín',
+    address: 'José María Morelos 115-B, Colonia San Agustín, 45645 Tlajomulco de Zúñiga, Jal.',
+    lat: 20.547979010094775,
+    lng: -103.46245301276805,
+    phone: '3332716129',
+    whatsapp: '3334449972',
+  },
+] as const;
+
+type SeedAcademy = (typeof SEEDED_ACADEMIES)[number];
+type SeedAcademyKey = SeedAcademy['key'];
+
+interface MemberSeedInput {
+  firstName: string;
+  firstNameKatakana?: string;
+  lastName: string;
+  code: string;
+  rankLevel: number;
+  avatarFileKey?: string;
+  dateOfBirth?: string;
+  curp?: string;
+  bloodType?: string;
+  specialCareNotes?: string;
+  emergencyPhone?: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+}
+
+function seedStudentsPerAcademy() {
+  const raw = process.env.SEED_STUDENTS_PER_ACADEMY;
+  if (!raw) return DEFAULT_STUDENTS_PER_ACADEMY;
+
+  const value = Number(raw);
+  if (
+    !Number.isInteger(value) ||
+    value < MIN_STUDENTS_PER_ACADEMY ||
+    value > MAX_STUDENTS_PER_ACADEMY
+  ) {
+    throw new Error(
+      `SEED_STUDENTS_PER_ACADEMY must be an integer between ${MIN_STUDENTS_PER_ACADEMY} and ${MAX_STUDENTS_PER_ACADEMY}.`,
+    );
+  }
+  return value;
+}
+
+const STUDENTS_PER_ACADEMY = seedStudentsPerAcademy();
+
+const GENERATED_FIRST_NAMES = [
+  'Valeria',
+  'Mateo',
+  'Camila',
+  'Santiago',
+  'Regina',
+  'Leonardo',
+  'Sofía',
+  'Emiliano',
+  'Ximena',
+  'Diego',
+  'Natalia',
+  'Rodrigo',
+  'Lucía',
+  'Bruno',
+  'Mariana',
+  'Julián',
+  'Abril',
+  'Mauricio',
+  'Alexa',
+  'Omar',
+  'Andrea',
+  'Jorge',
+  'Gabriela',
+  'Ricardo',
+  'Alejandra',
+  'Manuel',
+  'Mónica',
+  'Fernando',
+  'Ana',
+  'Pablo',
+  'Carlos',
+  'Isabella',
+  'Renata',
+  'Gael',
+  'Paula',
+  'Nicolás',
+] as const;
+
+const GENERATED_PATERNAL_LAST_NAMES = [
+  'Aguilar',
+  'Arias',
+  'Bautista',
+  'Benítez',
+  'Campos',
+  'Carrillo',
+  'Castillo',
+  'Ceballos',
+  'Cortés',
+  'Delgado',
+  'Escobar',
+  'Espinosa',
+  'Ferrer',
+  'Fuentes',
+  'García',
+  'Gómez',
+  'Hernández',
+  'Ibarra',
+  'Lara',
+  'López',
+  'Luna',
+  'Márquez',
+  'Mejía',
+  'Mendoza',
+  'Montiel',
+  'Morales',
+  'Nava',
+  'Núñez',
+  'Ochoa',
+  'Ortega',
+  'Palacios',
+  'Paredes',
+  'Pérez',
+  'Pineda',
+  'Quiroz',
+  'Ramos',
+] as const;
+
+const GENERATED_MATERNAL_LAST_NAMES = [
+  'Alcántara',
+  'Beltrán',
+  'Brito',
+  'Cárdenas',
+  'Castañeda',
+  'Cruz',
+  'Díaz',
+  'Franco',
+  'Gil',
+  'Herrera',
+  'Lara',
+  'León',
+  'Lozano',
+  'Maldonado',
+  'Medina',
+  'Mena',
+  'Mercado',
+  'Mora',
+  'Nava',
+  'Paredes',
+  'Peña',
+  'Ponce',
+  'Prado',
+  'Ríos',
+  'Rivas',
+  'Robles',
+  'Ruiz',
+  'Salas',
+  'Salcedo',
+  'Soto',
+  'Tapia',
+  'Trejo',
+  'Valle',
+  'Vargas',
+  'Vera',
+  'Vidal',
+] as const;
+
+const GENERATED_BLOOD_TYPES = ['O+', 'A+', 'B+', 'AB+', 'O-', 'A-'] as const;
+
+function generatedDateOfBirth(sequence: number) {
+  const group = sequence % 5;
+  const year =
+    group === 0
+      ? 2019 - (sequence % 2)
+      : group <= 2
+        ? 2017 - (sequence % 4)
+        : group === 3
+          ? 2012 - (sequence % 5)
+          : 2006 - (sequence % 22);
+  const month = (sequence % 12) + 1;
+  const day = (sequence % 27) + 1;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function generatedRankLevel(sequence: number) {
+  const group = sequence % 5;
+  if (group === 0) return 1 + (sequence % 3);
+  if (group <= 2) return 1 + (sequence % 6);
+  if (group === 3) return 2 + (sequence % 7);
+  return 4 + (sequence % 9);
+}
+
+function generatedPhone(base: string, academy: SeedAcademy, sequence: number, offset = 0) {
+  const prefix = base.replace(/\D/g, '').slice(0, 6).padEnd(6, '0');
+  const suffix = String(Number(academy.sourceId) * 100 + sequence + offset)
+    .padStart(4, '0')
+    .slice(-4);
+  return `${prefix}${suffix}`;
+}
+
+function generatedMemberInput(academy: SeedAcademy, sequence: number): MemberSeedInput {
+  const firstName = GENERATED_FIRST_NAMES[(sequence - 1) % GENERATED_FIRST_NAMES.length]!;
+  const paternal =
+    GENERATED_PATERNAL_LAST_NAMES[
+      (sequence + academy.code.length - 1) % GENERATED_PATERNAL_LAST_NAMES.length
+    ]!;
+  const maternal =
+    GENERATED_MATERNAL_LAST_NAMES[
+      (sequence * 3 + academy.sourceId.length) % GENERATED_MATERNAL_LAST_NAMES.length
+    ]!;
+  const padded = String(sequence).padStart(3, '0');
+  const lowerCode = academy.code.toLowerCase();
+
+  return {
+    firstName,
+    firstNameKatakana: katakanaForFirstName(firstName),
+    lastName: `${paternal} ${maternal}`,
+    code: `${academy.code}-G${padded}`,
+    rankLevel: generatedRankLevel(sequence),
+    dateOfBirth: generatedDateOfBirth(sequence),
+    bloodType: GENERATED_BLOOD_TYPES[(sequence - 1) % GENERATED_BLOOD_TYPES.length],
+    emergencyPhone: generatedPhone(academy.whatsapp, academy, sequence, 500),
+    email: `demo.${lowerCode}.gen${padded}@sensei.local`,
+    phone: generatedPhone(academy.phone, academy, sequence),
+    notes: `Alumno demo generado para carga de datos en ${academy.name}.`,
+  };
+}
+
 async function main() {
   console.log('Seeding demo data...');
+
+  const stats = {
+    dojosCreated: 0,
+    dojosUpdated: 0,
+    usersCreated: 0,
+    usersUpdated: 0,
+    rolesCreated: 0,
+    membersCreated: 0,
+    membersUpdated: 0,
+    classesCreated: 0,
+    classesUpdated: 0,
+    attendanceCreated: 0,
+    paymentsCreated: 0,
+  };
 
   // Organization
   const orgSlug = 'gojukan-demo';
@@ -59,78 +349,217 @@ async function main() {
         locale: 'es-MX',
       })
       .returning();
-    console.log(`  + organization ${org!.slug}`);
-  } else {
-    console.log(`  = organization ${org.slug}`);
   }
 
-  // Dojo
-  let [dojo] = await db
-    .select()
-    .from(dojos)
-    .where(sql`${dojos.organizationId} = ${org!.id} AND ${dojos.name} = 'Dojo Central'`);
-  if (!dojo) {
-    [dojo] = await db
-      .insert(dojos)
-      .values({ organizationId: org!.id, name: 'Dojo Central', code: 'CTR' })
+  async function upsertAcademyDojo(academy: SeedAcademy) {
+    const candidates =
+      academy.key === BOSQUES_KEY
+        ? await db
+            .select()
+            .from(dojos)
+            .where(
+              sql`${dojos.organizationId} = ${org!.id} AND (${dojos.code} = ${academy.code} OR ${dojos.name} = ${academy.name} OR ${dojos.code} = 'CTR' OR ${dojos.name} = 'Dojo Central')`,
+            )
+        : await db
+            .select()
+            .from(dojos)
+            .where(
+              sql`${dojos.organizationId} = ${org!.id} AND (${dojos.code} = ${academy.code} OR ${dojos.name} = ${academy.name})`,
+            );
+    let row =
+      candidates.find((candidate) => candidate.code === academy.code) ??
+      candidates.find((candidate) => candidate.name === academy.name) ??
+      candidates[0];
+    const dojoValues = {
+      organizationId: org!.id,
+      name: academy.name,
+      code: academy.code,
+      address: {
+        area: academy.area,
+        line1: academy.address,
+        lat: academy.lat,
+        lng: academy.lng,
+        phone: academy.phone,
+        whatsapp: academy.whatsapp,
+        publicKey: academy.key,
+        sourceId: academy.sourceId,
+      },
+      timezone: 'America/Mexico_City',
+      active: true,
+      deletedAt: null,
+      updatedAt: new Date(),
+    };
+
+    if (!row) {
+      [row] = await db.insert(dojos).values(dojoValues).returning();
+      stats.dojosCreated += 1;
+      return row!;
+    }
+
+    const [updated] = await db
+      .update(dojos)
+      .set(dojoValues)
+      .where(eq(dojos.id, row.id))
       .returning();
-    console.log(`  + dojo ${dojo!.name}`);
-  } else {
-    console.log(`  = dojo ${dojo.name}`);
+    stats.dojosUpdated += 1;
+    return updated ?? row;
   }
+
+  async function moveLegacyCentralDojoData(targetDojoId: string) {
+    const legacyDojos = await db
+      .select()
+      .from(dojos)
+      .where(
+        sql`${dojos.organizationId} = ${org!.id} AND ${dojos.id} <> ${targetDojoId} AND (${dojos.code} = 'CTR' OR ${dojos.name} = 'Dojo Central')`,
+      );
+
+    for (const legacyDojo of legacyDojos) {
+      await db
+        .update(members)
+        .set({ dojoId: targetDojoId })
+        .where(eq(members.dojoId, legacyDojo.id));
+      await db
+        .update(classes)
+        .set({ dojoId: targetDojoId })
+        .where(eq(classes.dojoId, legacyDojo.id));
+      await db
+        .update(payments)
+        .set({ dojoId: targetDojoId })
+        .where(eq(payments.dojoId, legacyDojo.id));
+      await db
+        .update(userRoles)
+        .set({ dojoId: targetDojoId })
+        .where(eq(userRoles.dojoId, legacyDojo.id));
+      await db
+        .update(dojos)
+        .set({
+          active: false,
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+          code: `CTR-MIGRADO-${legacyDojo.id.slice(0, 8)}`,
+          name: 'Dojo Central (migrado a Bosques de Santa Anita)',
+        })
+        .where(eq(dojos.id, legacyDojo.id));
+    }
+  }
+
+  const academyDojosByKey = {} as Record<
+    SeedAcademyKey,
+    Awaited<ReturnType<typeof upsertAcademyDojo>>
+  >;
+  for (const academy of SEEDED_ACADEMIES) {
+    academyDojosByKey[academy.key] = await upsertAcademyDojo(academy);
+  }
+  await moveLegacyCentralDojoData(academyDojosByKey[BOSQUES_KEY].id);
 
   // Users
   async function upsertUser(input: {
     email: string;
     name: string;
     password: string;
-    role: 'organization_admin' | 'instructor' | 'member';
+    role: UserRole;
+    dojoId?: string | null;
   }) {
     let [user] = await db.select().from(users).where(eq(users.email, input.email));
+    const passwordHash = await hash(input.password);
     if (!user) {
       [user] = await db
         .insert(users)
         .values({
           email: input.email,
           name: input.name,
-          passwordHash: await hash(input.password),
+          passwordHash,
           emailVerifiedAt: new Date(),
         })
         .returning();
-      console.log(`  + user ${user!.email}`);
+      stats.usersCreated += 1;
     } else {
-      console.log(`  = user ${user.email}`);
+      const [updated] = await db
+        .update(users)
+        .set({
+          name: input.name,
+          passwordHash,
+          emailVerifiedAt: user.emailVerifiedAt ?? new Date(),
+          deletedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+      user = updated ?? user;
+      stats.usersUpdated += 1;
     }
     const existing = await db
       .select()
       .from(userRoles)
       .where(
-        sql`${userRoles.userId} = ${user!.id} AND ${userRoles.organizationId} = ${org!.id} AND ${userRoles.role} = ${input.role}`,
+        input.dojoId
+          ? sql`${userRoles.userId} = ${user!.id} AND ${userRoles.organizationId} = ${org!.id} AND ${userRoles.dojoId} = ${input.dojoId} AND ${userRoles.role} = ${input.role}`
+          : sql`${userRoles.userId} = ${user!.id} AND ${userRoles.organizationId} = ${org!.id} AND ${userRoles.dojoId} IS NULL AND ${userRoles.role} = ${input.role}`,
       );
     if (existing.length === 0) {
       await db.insert(userRoles).values({
         userId: user!.id,
         organizationId: org!.id,
-        dojoId: input.role === 'organization_admin' ? null : dojo!.id,
+        dojoId: input.dojoId ?? null,
         role: input.role,
       });
-      console.log(`    grant ${input.role}`);
+      stats.rolesCreated += 1;
     }
     return user!;
   }
 
-  const admin = await upsertUser({
-    email: 'admin@sensei.local',
-    name: 'Admin Demo',
-    password: 'admin1234',
-    role: 'organization_admin',
+  async function disableLegacyGenericLogin(email: string) {
+    const [legacyUser] = await db.select().from(users).where(eq(users.email, email));
+    if (!legacyUser) return;
+    await db
+      .update(users)
+      .set({
+        email: `retired.${legacyUser.id.slice(0, 8)}.${email}`,
+        passwordHash: null,
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, legacyUser.id));
+  }
+
+  await upsertUser({
+    email: 'superadmin@sensei.local',
+    name: 'Super Admin Gojukan',
+    password: 'superadmin1234',
+    role: 'super_admin',
+    dojoId: null,
   });
-  const instructor = await upsertUser({
-    email: 'sensei@sensei.local',
-    name: 'Sensei Demo',
-    password: 'sensei1234',
-    role: 'instructor',
-  });
+
+  const academyUsersByKey = {} as Record<
+    SeedAcademyKey,
+    {
+      admin: Awaited<ReturnType<typeof upsertUser>>;
+      instructor: Awaited<ReturnType<typeof upsertUser>>;
+    }
+  >;
+  for (const academy of SEEDED_ACADEMIES) {
+    const normalizedKey = academy.key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    const dojoId = academyDojosByKey[academy.key].id;
+    academyUsersByKey[academy.key] = {
+      admin: await upsertUser({
+        email: `admin.${normalizedKey}@sensei.local`,
+        name: `Admin ${academy.name}`,
+        password: 'admin1234',
+        role: 'dojo_admin',
+        dojoId,
+      }),
+      instructor: await upsertUser({
+        email: `sensei.${normalizedKey}@sensei.local`,
+        name: `Sensei ${academy.name}`,
+        password: 'sensei1234',
+        role: 'instructor',
+        dojoId,
+      }),
+    };
+  }
+
+  await disableLegacyGenericLogin('admin@sensei.local');
+  await disableLegacyGenericLogin('sensei@sensei.local');
 
   // Rank definitions (Gojukan scale)
   for (const b of rankCatalog) {
@@ -153,32 +582,30 @@ async function main() {
     .select()
     .from(rankDefinitions)
     .where(eq(rankDefinitions.organizationId, org!.id));
-  console.log(`  = rank definitions: ${allRanks.length}`);
 
   // Members
-  async function upsertMember(input: {
-    firstName: string;
-    firstNameKatakana?: string;
-    lastName: string;
-    code: string;
-    rankLevel: number;
-    avatarFileKey?: string;
-    dateOfBirth?: string;
-    curp?: string;
-    bloodType?: string;
-    specialCareNotes?: string;
-    emergencyPhone?: string;
-    email?: string;
-    phone?: string;
-    notes?: string;
-  }) {
+  const seededMembersByAcademy: Record<
+    SeedAcademyKey,
+    Array<Awaited<ReturnType<typeof upsertMember>>>
+  > = {
+    bosquesSantaAnita: [],
+    bugambilias: [],
+    lasAguilas: [],
+    sanAgustin: [],
+  };
+
+  // Members without an explicit academy are legacy CTR demo records and belong to Bosques.
+  async function upsertMember(input: MemberSeedInput & { academyKey?: SeedAcademyKey }) {
+    const academyKey = input.academyKey ?? BOSQUES_KEY;
+    const dojo = academyDojosByKey[academyKey];
+    const actor = academyUsersByKey[academyKey].admin;
     const existing = await db
       .select()
       .from(members)
       .where(sql`${members.organizationId} = ${org!.id} AND ${members.code} = ${input.code}`);
     let row = existing[0];
     const avatarFileId = input.avatarFileKey
-      ? (await ensureAvatarFile(input.avatarFileKey, `${input.code}.svg`)).id
+      ? (await ensureAvatarFile(input.avatarFileKey, `${input.code}.svg`, actor.id)).id
       : row?.avatarFileId;
     const memberValues = {
       dojoId: dojo!.id,
@@ -196,7 +623,7 @@ async function main() {
       phone: input.phone,
       status: 'active' as const,
       notes: input.notes,
-      updatedBy: admin.id,
+      updatedBy: actor.id,
       updatedAt: new Date(),
     };
 
@@ -206,10 +633,10 @@ async function main() {
         .values({
           organizationId: org!.id,
           ...memberValues,
-          createdBy: admin.id,
+          createdBy: actor.id,
         })
         .returning();
-      console.log(`  + member ${row!.firstName} ${row!.lastName}`);
+      stats.membersCreated += 1;
     } else {
       const [updated] = await db
         .update(members)
@@ -217,13 +644,14 @@ async function main() {
         .where(eq(members.id, row.id))
         .returning();
       row = updated ?? row;
-      console.log(`  = member ${row.firstName} ${row.lastName}`);
+      stats.membersUpdated += 1;
     }
-    await ensureCurrentRank(row!.id, input.rankLevel);
+    await ensureCurrentRank(row!.id, input.rankLevel, actor.id);
+    seededMembersByAcademy[academyKey].push(row!);
     return row!;
   }
 
-  async function ensureAvatarFile(key: string, originalName: string) {
+  async function ensureAvatarFile(key: string, originalName: string, uploadedBy: string) {
     const [existing] = await db
       .select()
       .from(files)
@@ -234,7 +662,7 @@ async function main() {
       .insert(files)
       .values({
         organizationId: org!.id,
-        uploadedBy: admin.id,
+        uploadedBy,
         key,
         contentType: 'image/svg+xml',
         originalName,
@@ -243,7 +671,7 @@ async function main() {
     return file!;
   }
 
-  async function ensureCurrentRank(memberId: string, rankLevel: number) {
+  async function ensureCurrentRank(memberId: string, rankLevel: number, awardedBy: string) {
     const def = allRanks.find((r) => r.level === rankLevel);
     if (!def) return;
 
@@ -264,14 +692,18 @@ async function main() {
       memberId,
       rankDefinitionId: def.id,
       awardedAt: new Date().toISOString().slice(0, 10),
-      awardedBy: admin.id,
+      awardedBy,
       isCurrent: true,
       notes: 'Rango demo asignado por seed.',
     });
   }
 
   type DemoClassKey = 'smallKids' | 'bigKids' | 'teens' | 'adults';
-  const demoClassAssignments: Array<{ memberId: string; classKey: DemoClassKey }> = [];
+  const demoClassAssignments: Array<{
+    academyKey: SeedAcademyKey;
+    memberId: string;
+    classKey: DemoClassKey;
+  }> = [];
 
   function ageFromDateOfBirth(dateOfBirth?: string) {
     if (!dateOfBirth) return null;
@@ -297,8 +729,16 @@ async function main() {
     return 'adults';
   }
 
-  function queueClassAssignment(memberId: string, dateOfBirth?: string) {
-    demoClassAssignments.push({ memberId, classKey: classKeyForDateOfBirth(dateOfBirth) });
+  function queueClassAssignment(
+    memberId: string,
+    dateOfBirth?: string,
+    academyKey: SeedAcademyKey = BOSQUES_KEY,
+  ) {
+    demoClassAssignments.push({
+      academyKey,
+      memberId,
+      classKey: classKeyForDateOfBirth(dateOfBirth),
+    });
   }
 
   const m1 = await upsertMember({
@@ -825,6 +1265,193 @@ async function main() {
     queueClassAssignment(row.id, demoMember.dateOfBirth);
   }
 
+  const academyDemoMemberGroups: Array<{
+    academyKey: Exclude<SeedAcademyKey, typeof BOSQUES_KEY>;
+    members: MemberSeedInput[];
+  }> = [
+    {
+      academyKey: 'bugambilias',
+      members: [
+        {
+          firstName: 'Aitana',
+          firstNameKatakana: 'アイタナ',
+          lastName: 'Bravo Medina',
+          code: 'BUG-001',
+          rankLevel: 1,
+          dateOfBirth: '2018-05-15',
+          phone: '3330778001',
+          emergencyPhone: '3330778101',
+          email: 'demo.bug001@sensei.local',
+          notes: 'Alumno demo de la academia Bugambilias.',
+        },
+        {
+          firstName: 'Iker',
+          firstNameKatakana: 'イケル',
+          lastName: 'Salcedo Rivas',
+          code: 'BUG-002',
+          rankLevel: 3,
+          dateOfBirth: '2015-10-22',
+          phone: '3330778002',
+          emergencyPhone: '3330778102',
+          email: 'demo.bug002@sensei.local',
+          notes: 'Alumno demo de la academia Bugambilias.',
+        },
+        {
+          firstName: 'Regina',
+          firstNameKatakana: 'レヒナ',
+          lastName: 'Lozano Ávila',
+          code: 'BUG-003',
+          rankLevel: 5,
+          dateOfBirth: '2012-01-18',
+          phone: '3330778003',
+          emergencyPhone: '3330778103',
+          email: 'demo.bug003@sensei.local',
+          notes: 'Alumno demo de la academia Bugambilias.',
+        },
+        {
+          firstName: 'Hugo',
+          firstNameKatakana: 'ウゴ',
+          lastName: 'Moreno Casas',
+          code: 'BUG-004',
+          rankLevel: 8,
+          dateOfBirth: '2009-09-09',
+          phone: '3330778004',
+          emergencyPhone: '3330778104',
+          email: 'demo.bug004@sensei.local',
+          notes: 'Alumno demo de la academia Bugambilias.',
+        },
+      ],
+    },
+    {
+      academyKey: 'lasAguilas',
+      members: [
+        {
+          firstName: 'Julieta',
+          firstNameKatakana: 'フリエタ',
+          lastName: 'Aguirre Santos',
+          code: 'AGU-001',
+          rankLevel: 2,
+          dateOfBirth: '2017-06-28',
+          phone: '3336347001',
+          emergencyPhone: '3336347101',
+          email: 'demo.agu001@sensei.local',
+          notes: 'Alumno demo de la academia Las Águilas.',
+        },
+        {
+          firstName: 'Damián',
+          firstNameKatakana: 'ダミアン',
+          lastName: 'Paredes Cano',
+          code: 'AGU-002',
+          rankLevel: 4,
+          dateOfBirth: '2014-12-03',
+          phone: '3336347002',
+          emergencyPhone: '3336347102',
+          email: 'demo.agu002@sensei.local',
+          notes: 'Alumno demo de la academia Las Águilas.',
+        },
+        {
+          firstName: 'Montserrat',
+          firstNameKatakana: 'モンセラット',
+          lastName: 'Silva Ponce',
+          code: 'AGU-003',
+          rankLevel: 6,
+          dateOfBirth: '2011-07-21',
+          phone: '3336347003',
+          emergencyPhone: '3336347103',
+          email: 'demo.agu003@sensei.local',
+          notes: 'Alumno demo de la academia Las Águilas.',
+        },
+        {
+          firstName: 'Erick',
+          firstNameKatakana: 'エリック',
+          lastName: 'Cárdenas Soto',
+          code: 'AGU-004',
+          rankLevel: 9,
+          dateOfBirth: '2006-11-11',
+          phone: '3336347004',
+          emergencyPhone: '3336347104',
+          email: 'demo.agu004@sensei.local',
+          notes: 'Alumno demo de la academia Las Águilas.',
+        },
+      ],
+    },
+    {
+      academyKey: 'sanAgustin',
+      members: [
+        {
+          firstName: 'Romina',
+          firstNameKatakana: 'ロミナ',
+          lastName: 'Nava Castillo',
+          code: 'SAG-001',
+          rankLevel: 1,
+          dateOfBirth: '2019-03-19',
+          phone: '3332716001',
+          emergencyPhone: '3332716101',
+          email: 'demo.sag001@sensei.local',
+          notes: 'Alumno demo de la academia San Agustín.',
+        },
+        {
+          firstName: 'Alan',
+          firstNameKatakana: 'アラン',
+          lastName: 'Tovar Robles',
+          code: 'SAG-002',
+          rankLevel: 3,
+          dateOfBirth: '2016-02-07',
+          phone: '3332716002',
+          emergencyPhone: '3332716102',
+          email: 'demo.sag002@sensei.local',
+          notes: 'Alumno demo de la academia San Agustín.',
+        },
+        {
+          firstName: 'Paola',
+          firstNameKatakana: 'パオラ',
+          lastName: 'Mendoza Gálvez',
+          code: 'SAG-003',
+          rankLevel: 6,
+          dateOfBirth: '2011-08-29',
+          phone: '3332716003',
+          emergencyPhone: '3332716103',
+          email: 'demo.sag003@sensei.local',
+          notes: 'Alumno demo de la academia San Agustín.',
+        },
+        {
+          firstName: 'Leonel',
+          firstNameKatakana: 'レオネル',
+          lastName: 'Figueroa Reyes',
+          code: 'SAG-004',
+          rankLevel: 10,
+          dateOfBirth: '1999-04-04',
+          phone: '3332716004',
+          emergencyPhone: '3332716104',
+          email: 'demo.sag004@sensei.local',
+          notes: 'Alumno demo de la academia San Agustín.',
+        },
+      ],
+    },
+  ];
+
+  for (const group of academyDemoMemberGroups) {
+    for (const demoMember of group.members) {
+      const row = await upsertMember({ ...demoMember, academyKey: group.academyKey });
+      queueClassAssignment(row.id, demoMember.dateOfBirth, group.academyKey);
+    }
+  }
+
+  async function ensureGeneratedAcademyMembers(academy: SeedAcademy) {
+    const staticCount = seededMembersByAcademy[academy.key].length;
+    const generatedCount = Math.max(0, STUDENTS_PER_ACADEMY - staticCount);
+
+    for (let sequence = 1; sequence <= generatedCount; sequence += 1) {
+      const demoMember = generatedMemberInput(academy, sequence);
+      const row = await upsertMember({ ...demoMember, academyKey: academy.key });
+      queueClassAssignment(row.id, demoMember.dateOfBirth, academy.key);
+    }
+  }
+
+  for (const academy of SEEDED_ACADEMIES) {
+    await ensureGeneratedAcademyMembers(academy);
+  }
+
   function dateWithTime(time: string) {
     const [hours = '0', minutes = '0'] = time.split(':');
     const date = new Date('2026-01-05T00:00:00');
@@ -833,6 +1460,7 @@ async function main() {
   }
 
   async function ensureClass(input: {
+    academyKey: SeedAcademyKey;
     name: string;
     startTime: string;
     endTime: string;
@@ -840,6 +1468,8 @@ async function main() {
     capacity: number;
     notes: string;
   }) {
+    const dojo = academyDojosByKey[input.academyKey];
+    const instructor = academyUsersByKey[input.academyKey].instructor;
     const existingClass = await db
       .select()
       .from(classes)
@@ -860,7 +1490,7 @@ async function main() {
 
     if (!row) {
       [row] = await db.insert(classes).values(classValues).returning();
-      console.log(`  + class ${row!.name}`);
+      stats.classesCreated += 1;
     } else {
       const [updated] = await db
         .update(classes)
@@ -868,7 +1498,7 @@ async function main() {
         .where(eq(classes.id, row.id))
         .returning();
       row = updated ?? row;
-      console.log(`  = class ${row.name}`);
+      stats.classesUpdated += 1;
     }
 
     const instructorRows = await db
@@ -888,40 +1518,48 @@ async function main() {
     return row!;
   }
 
-  const demoClasses: Record<DemoClassKey, Awaited<ReturnType<typeof ensureClass>>> = {
-    smallKids: await ensureClass({
-      name: 'Niños pequeños',
-      startTime: '16:00',
-      endTime: '17:00',
-      recurrenceRule: 'L,M,Mi,J,V',
-      capacity: 18,
-      notes: 'LMMiJV 4 - 5 pm. Grupo demo para niños pequeños.',
-    }),
-    bigKids: await ensureClass({
-      name: 'Niños grandes',
-      startTime: '17:00',
-      endTime: '18:00',
-      recurrenceRule: 'L,M,Mi,J,V',
-      capacity: 22,
-      notes: 'LMMiJV 5 - 6 pm. Grupo demo para niños grandes.',
-    }),
-    teens: await ensureClass({
-      name: 'Adolescentes',
-      startTime: '18:00',
-      endTime: '19:00',
-      recurrenceRule: 'L,M,Mi,J,V',
-      capacity: 24,
-      notes: 'LMMiJV 6 - 7 pm. Grupo demo para adolescentes.',
-    }),
-    adults: await ensureClass({
-      name: 'Adultos',
-      startTime: '19:00',
-      endTime: '20:00',
-      recurrenceRule: 'L,Mi,V',
-      capacity: 24,
-      notes: 'LMiV 7 - 8 pm. Grupo demo para adultos.',
-    }),
-  };
+  type DemoClassMap = Record<DemoClassKey, Awaited<ReturnType<typeof ensureClass>>>;
+  const demoClassesByAcademy = {} as Record<SeedAcademyKey, DemoClassMap>;
+  for (const academy of SEEDED_ACADEMIES) {
+    demoClassesByAcademy[academy.key] = {
+      smallKids: await ensureClass({
+        academyKey: academy.key,
+        name: 'Niños pequeños',
+        startTime: '16:00',
+        endTime: '17:00',
+        recurrenceRule: 'L,M,Mi,J,V',
+        capacity: 18,
+        notes: `LMMiJV 4 - 5 pm. Grupo demo para niños pequeños en ${academy.name}.`,
+      }),
+      bigKids: await ensureClass({
+        academyKey: academy.key,
+        name: 'Niños grandes',
+        startTime: '17:00',
+        endTime: '18:00',
+        recurrenceRule: 'L,M,Mi,J,V',
+        capacity: 22,
+        notes: `LMMiJV 5 - 6 pm. Grupo demo para niños grandes en ${academy.name}.`,
+      }),
+      teens: await ensureClass({
+        academyKey: academy.key,
+        name: 'Adolescentes',
+        startTime: '18:00',
+        endTime: '19:00',
+        recurrenceRule: 'L,M,Mi,J,V',
+        capacity: 24,
+        notes: `LMMiJV 6 - 7 pm. Grupo demo para adolescentes en ${academy.name}.`,
+      }),
+      adults: await ensureClass({
+        academyKey: academy.key,
+        name: 'Adultos',
+        startTime: '19:00',
+        endTime: '20:00',
+        recurrenceRule: 'L,Mi,V',
+        capacity: 24,
+        notes: `LMiV 7 - 8 pm. Grupo demo para adultos en ${academy.name}.`,
+      }),
+    };
+  }
 
   async function ensureClassAssignment(memberId: string, classId: string) {
     const existing = await db
@@ -939,60 +1577,88 @@ async function main() {
   }
 
   for (const assignment of demoClassAssignments) {
-    await ensureClassAssignment(assignment.memberId, demoClasses[assignment.classKey].id);
+    await ensureClassAssignment(
+      assignment.memberId,
+      demoClassesByAcademy[assignment.academyKey][assignment.classKey].id,
+    );
   }
 
   // Sample attendance + payment
-  const attendanceClass = demoClasses.bigKids;
-  const att1 = await db
-    .select()
-    .from(attendance)
-    .where(sql`${attendance.classId} = ${attendanceClass.id} AND ${attendance.memberId} = ${m1.id}`);
-  if (att1.length === 0) {
-    await db.insert(attendance).values({
-      classId: attendanceClass.id,
-      memberId: m1.id,
-      status: 'present',
-      markedBy: instructor.id,
-    });
-  }
-  const att2 = await db
-    .select()
-    .from(attendance)
-    .where(sql`${attendance.classId} = ${attendanceClass.id} AND ${attendance.memberId} = ${m2.id}`);
-  if (att2.length === 0) {
-    await db.insert(attendance).values({
-      classId: attendanceClass.id,
-      memberId: m2.id,
-      status: 'absent',
-      markedBy: instructor.id,
-    });
-  }
-  const pay1 = await db
-    .select()
-    .from(payments)
-    .where(sql`${payments.memberId} = ${m2.id}`);
-  if (pay1.length === 0) {
-    await db.insert(payments).values({
-      organizationId: org!.id,
-      dojoId: dojo!.id,
-      memberId: m2.id,
-      amount: '600.00',
-      method: 'cash',
-      reference: 'Mensualidad demo',
-      createdBy: admin.id,
-    });
+  for (const academy of SEEDED_ACADEMIES) {
+    const academyMembers = seededMembersByAcademy[academy.key];
+    const attendanceClass = demoClassesByAcademy[academy.key].bigKids;
+    const instructor = academyUsersByKey[academy.key].instructor;
+    const academyAdmin = academyUsersByKey[academy.key].admin;
+    const [firstMember, secondMember = firstMember] = academyMembers;
+
+    if (firstMember) {
+      const existingAttendance = await db
+        .select()
+        .from(attendance)
+        .where(
+          sql`${attendance.classId} = ${attendanceClass.id} AND ${attendance.memberId} = ${firstMember.id}`,
+        );
+      if (existingAttendance.length === 0) {
+        await db.insert(attendance).values({
+          classId: attendanceClass.id,
+          memberId: firstMember.id,
+          status: 'present',
+          markedBy: instructor.id,
+        });
+        stats.attendanceCreated += 1;
+      }
+    }
+
+    if (secondMember) {
+      const existingAttendance = await db
+        .select()
+        .from(attendance)
+        .where(
+          sql`${attendance.classId} = ${attendanceClass.id} AND ${attendance.memberId} = ${secondMember.id}`,
+        );
+      if (existingAttendance.length === 0) {
+        await db.insert(attendance).values({
+          classId: attendanceClass.id,
+          memberId: secondMember.id,
+          status: academy.key === BOSQUES_KEY ? 'absent' : 'late',
+          markedBy: instructor.id,
+        });
+        stats.attendanceCreated += 1;
+      }
+    }
+
+    const paymentMember = secondMember ?? firstMember;
+    if (paymentMember) {
+      const existingPayments = await db
+        .select()
+        .from(payments)
+        .where(sql`${payments.memberId} = ${paymentMember.id}`);
+      if (existingPayments.length === 0) {
+        await db.insert(payments).values({
+          organizationId: org!.id,
+          dojoId: academyDojosByKey[academy.key].id,
+          memberId: paymentMember.id,
+          amount: '600.00',
+          method: 'cash',
+          reference: 'Mensualidad demo',
+          createdBy: academyAdmin.id,
+        });
+        stats.paymentsCreated += 1;
+      }
+    }
   }
 
-  console.log('\nSeed complete.');
-  console.log('Login: admin@sensei.local / admin1234');
-  console.log('Login: sensei@sensei.local / sensei1234');
+  console.log(
+    `Seed complete: ${SEEDED_ACADEMIES.length} academies, ${STUDENTS_PER_ACADEMY} students per academy, ${stats.usersCreated + stats.usersUpdated} users, ${stats.membersCreated + stats.membersUpdated} students.`,
+  );
+  console.log('Super admin: superadmin@sensei.local / superadmin1234');
+  console.log('Academy users: admin.<academy>@sensei.local and sensei.<academy>@sensei.local');
 }
 
 main()
   .then(() => client.end())
   .catch(async (err) => {
-    console.error('Seed failed:', err);
+    console.error(`Seed failed: ${err instanceof Error ? err.message : String(err)}`);
     await client.end();
     process.exit(1);
   });

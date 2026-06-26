@@ -1,12 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { auditLog, classes, dojos, memberClassAssignments, members } from '@/db/schema';
+import { auditLog, classes, memberClassAssignments, members } from '@/db/schema';
 import { classDateFromTime } from '@/lib/class-schedule';
 import { auth } from '@/lib/auth';
-import { currentOrganizationId, requireRole } from '@/lib/rbac';
+import { getRoleAccessScope, requireRole, type RoleAccessScope } from '@/lib/rbac';
+import { getActiveDojoForAccess } from '@/server/access';
 import {
   classAssignmentInputSchema,
   classIdSchema,
@@ -32,15 +33,59 @@ export interface ClassActionResult<T = unknown> {
   fieldErrors?: Record<string, string[]>;
 }
 
+function classAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(classes.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(classes.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
+}
+
+function memberAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(members.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(members.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
+}
+
+function classAccessFilters(scope: RoleAccessScope, id: string): SQL[] {
+  const filters: SQL[] = [eq(classes.id, id), isNull(classes.deletedAt)];
+  const accessFilter = classAccessPredicate(scope);
+  if (accessFilter) filters.push(accessFilter);
+  return filters;
+}
+
+function memberAccessFilters(scope: RoleAccessScope, id: string): SQL[] {
+  const filters: SQL[] = [eq(members.id, id), isNull(members.deletedAt)];
+  const accessFilter = memberAccessPredicate(scope);
+  if (accessFilter) filters.push(accessFilter);
+  return filters;
+}
+
 export async function createClassAction(
   input: ClassInput,
 ): Promise<ClassActionResult<{ id: string }>> {
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin', 'instructor'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = classInputSchema.safeParse(input);
   if (!parsed.success) {
@@ -52,16 +97,13 @@ export async function createClassAction(
   }
   const v = parsed.data;
 
-  const [dojo] = await db
-    .select({ id: dojos.id })
-    .from(dojos)
-    .where(and(eq(dojos.id, v.dojoId), eq(dojos.organizationId, orgId), isNull(dojos.deletedAt)));
+  const dojo = await getActiveDojoForAccess(accessScope, v.dojoId);
   if (!dojo) return { ok: false, error: 'invalidDojo' };
 
   const [row] = await db
     .insert(classes)
     .values({
-      organizationId: orgId,
+      organizationId: dojo.organizationId,
       dojoId: dojo.id,
       name: v.name,
       startsAt: classDateFromTime(v.startTime),
@@ -73,7 +115,7 @@ export async function createClassAction(
     .returning({ id: classes.id });
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: dojo.organizationId,
     actorUserId: session.user.id,
     action: 'class.create',
     entity: 'class',
@@ -95,11 +137,9 @@ export async function updateClassAction(
   }
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin', 'instructor'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = classInputSchema.safeParse(input);
   if (!parsed.success) {
@@ -111,21 +151,19 @@ export async function updateClassAction(
   }
   const v = parsed.data;
 
-  const [dojo] = await db
-    .select({ id: dojos.id })
-    .from(dojos)
-    .where(and(eq(dojos.id, v.dojoId), eq(dojos.organizationId, orgId), isNull(dojos.deletedAt)));
+  const dojo = await getActiveDojoForAccess(accessScope, v.dojoId);
   if (!dojo) return { ok: false, error: 'invalidDojo' };
 
   const [before] = await db
     .select()
     .from(classes)
-    .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+    .where(and(...classAccessFilters(accessScope, id)));
   if (!before) return { ok: false, error: 'notFound' };
 
   await db
     .update(classes)
     .set({
+      organizationId: dojo.organizationId,
       dojoId: dojo.id,
       name: v.name,
       startsAt: classDateFromTime(v.startTime),
@@ -135,10 +173,10 @@ export async function updateClassAction(
       notes: v.notes,
       updatedAt: new Date(),
     })
-    .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+    .where(and(...classAccessFilters(accessScope, id)));
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: dojo.organizationId,
     actorUserId: session.user.id,
     action: 'class.update',
     entity: 'class',
@@ -160,16 +198,14 @@ export async function softDeleteClassAction(id: string): Promise<ClassActionResu
   }
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin', 'instructor'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const [before] = await db
     .select()
     .from(classes)
-    .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+    .where(and(...classAccessFilters(accessScope, id)));
   if (!before) return { ok: false, error: 'notFound' };
 
   await db.transaction(async (tx) => {
@@ -177,13 +213,13 @@ export async function softDeleteClassAction(id: string): Promise<ClassActionResu
     await tx
       .update(classes)
       .set({ deletedAt: endedAt, updatedAt: endedAt })
-      .where(and(eq(classes.id, id), eq(classes.organizationId, orgId), isNull(classes.deletedAt)));
+      .where(and(...classAccessFilters(accessScope, id)));
     await tx
       .update(memberClassAssignments)
       .set({ endedAt })
       .where(and(eq(memberClassAssignments.classId, id), isNull(memberClassAssignments.endedAt)));
     await tx.insert(auditLog).values({
-      organizationId: orgId,
+      organizationId: before.organizationId,
       actorUserId: session.user.id,
       action: 'class.delete',
       entity: 'class',
@@ -203,11 +239,9 @@ export async function assignMemberToClassAction(
   input: ClassAssignmentInput,
 ): Promise<ClassActionResult> {
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin', 'instructor'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = classAssignmentInputSchema.safeParse(input);
   if (!parsed.success) {
@@ -220,21 +254,19 @@ export async function assignMemberToClassAction(
   const v = parsed.data;
 
   const [member] = await db
-    .select({ id: members.id, dojoId: members.dojoId })
+    .select({ id: members.id, organizationId: members.organizationId, dojoId: members.dojoId })
     .from(members)
-    .where(
-      and(eq(members.id, v.memberId), eq(members.organizationId, orgId), isNull(members.deletedAt)),
-    );
+    .where(and(...memberAccessFilters(accessScope, v.memberId)));
   if (!member) return { ok: false, error: 'invalidMember' };
 
   const [classRow] = await db
-    .select({ id: classes.id, dojoId: classes.dojoId })
+    .select({ id: classes.id, organizationId: classes.organizationId, dojoId: classes.dojoId })
     .from(classes)
-    .where(
-      and(eq(classes.id, v.classId), eq(classes.organizationId, orgId), isNull(classes.deletedAt)),
-    );
+    .where(and(...classAccessFilters(accessScope, v.classId)));
   if (!classRow) return { ok: false, error: 'invalidClass' };
-  if (classRow.dojoId !== member.dojoId) return { ok: false, error: 'dojoMismatch' };
+  if (classRow.organizationId !== member.organizationId || classRow.dojoId !== member.dojoId) {
+    return { ok: false, error: 'dojoMismatch' };
+  }
 
   const existing = await db
     .select({ id: memberClassAssignments.id })
@@ -255,7 +287,7 @@ export async function assignMemberToClassAction(
   }
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: classRow.organizationId,
     actorUserId: session.user.id,
     action: 'class.assign_member',
     entity: 'class',
@@ -280,29 +312,24 @@ export async function endMemberClassAssignmentAction(
   }
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin', 'instructor'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const [member] = await db
-    .select({ id: members.id })
+    .select({ id: members.id, organizationId: members.organizationId, dojoId: members.dojoId })
     .from(members)
-    .where(
-      and(
-        eq(members.id, input.memberId),
-        eq(members.organizationId, orgId),
-        isNull(members.deletedAt),
-      ),
-    );
+    .where(and(...memberAccessFilters(accessScope, input.memberId)));
   if (!member) return { ok: false, error: 'invalidMember' };
 
   const [classRow] = await db
-    .select({ id: classes.id })
+    .select({ id: classes.id, organizationId: classes.organizationId, dojoId: classes.dojoId })
     .from(classes)
-    .where(and(eq(classes.id, input.classId), eq(classes.organizationId, orgId)));
+    .where(and(...classAccessFilters(accessScope, input.classId)));
   if (!classRow) return { ok: false, error: 'invalidClass' };
+  if (classRow.organizationId !== member.organizationId || classRow.dojoId !== member.dojoId) {
+    return { ok: false, error: 'dojoMismatch' };
+  }
 
   await db
     .update(memberClassAssignments)
@@ -316,7 +343,7 @@ export async function endMemberClassAssignmentAction(
     );
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: classRow.organizationId,
     actorUserId: session.user.id,
     action: 'class.unassign_member',
     entity: 'class',

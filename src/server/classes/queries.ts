@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNull } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
   classes,
@@ -10,8 +10,8 @@ import {
   ranks,
 } from '@/db/schema';
 import { formatClassSchedule } from '@/lib/class-schedule';
+import type { RoleAccessScope } from '@/lib/rbac';
 import { classIdSchema } from './schemas';
-import { sql } from 'drizzle-orm';
 
 export interface ClassRow {
   id: string;
@@ -41,7 +41,27 @@ export interface AssignableClassMember {
   lastName: string;
 }
 
-export async function listClassesForOrg(organizationId: string): Promise<ClassRow[]> {
+function orgScope(organizationId: string): RoleAccessScope {
+  return { global: false, organizationIds: [organizationId], dojoIds: [] };
+}
+
+function classAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(classes.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(classes.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
+}
+
+export async function listClassesForAccess(accessScope: RoleAccessScope): Promise<ClassRow[]> {
   const activeCounts = db
     .select({
       classId: memberClassAssignments.classId,
@@ -51,6 +71,10 @@ export async function listClassesForOrg(organizationId: string): Promise<ClassRo
     .where(isNull(memberClassAssignments.endedAt))
     .groupBy(memberClassAssignments.classId)
     .as('active_counts');
+
+  const filters: SQL[] = [isNull(classes.deletedAt)];
+  const accessFilter = classAccessPredicate(accessScope);
+  if (accessFilter) filters.push(accessFilter);
 
   const rows = await db
     .select({
@@ -68,7 +92,7 @@ export async function listClassesForOrg(organizationId: string): Promise<ClassRo
     .from(classes)
     .innerJoin(dojos, eq(dojos.id, classes.dojoId))
     .leftJoin(activeCounts, eq(activeCounts.classId, classes.id))
-    .where(and(eq(classes.organizationId, organizationId), isNull(classes.deletedAt)))
+    .where(and(...filters))
     .orderBy(asc(classes.startsAt), asc(classes.name));
 
   return rows.map((row) => ({
@@ -78,12 +102,21 @@ export async function listClassesForOrg(organizationId: string): Promise<ClassRo
   }));
 }
 
-export async function getClassDetail(organizationId: string, id: string) {
+export async function listClassesForOrg(organizationId: string): Promise<ClassRow[]> {
+  return listClassesForAccess(orgScope(organizationId));
+}
+
+export async function getClassDetailForAccess(accessScope: RoleAccessScope, id: string) {
   if (!classIdSchema.safeParse(id).success) return null;
+
+  const filters: SQL[] = [eq(classes.id, id), isNull(classes.deletedAt)];
+  const accessFilter = classAccessPredicate(accessScope);
+  if (accessFilter) filters.push(accessFilter);
 
   const [row] = await db
     .select({
       id: classes.id,
+      organizationId: classes.organizationId,
       name: classes.name,
       dojoId: classes.dojoId,
       dojoName: dojos.name,
@@ -96,13 +129,7 @@ export async function getClassDetail(organizationId: string, id: string) {
     })
     .from(classes)
     .innerJoin(dojos, eq(dojos.id, classes.dojoId))
-    .where(
-      and(
-        eq(classes.id, id),
-        eq(classes.organizationId, organizationId),
-        isNull(classes.deletedAt),
-      ),
-    );
+    .where(and(...filters));
 
   if (!row) return null;
 
@@ -125,6 +152,7 @@ export async function getClassDetail(organizationId: string, id: string) {
     .where(
       and(
         eq(memberClassAssignments.classId, row.id),
+        eq(members.organizationId, row.organizationId),
         isNull(memberClassAssignments.endedAt),
         isNull(members.deletedAt),
       ),
@@ -141,7 +169,7 @@ export async function getClassDetail(organizationId: string, id: string) {
     .from(members)
     .where(
       and(
-        eq(members.organizationId, organizationId),
+        eq(members.organizationId, row.organizationId),
         eq(members.dojoId, row.dojoId),
         isNull(members.deletedAt),
       ),
@@ -154,4 +182,8 @@ export async function getClassDetail(organizationId: string, id: string) {
     roster,
     assignableMembers: assignableMembers.filter((member) => !assignedIds.has(member.id)),
   };
+}
+
+export async function getClassDetail(organizationId: string, id: string) {
+  return getClassDetailForAccess(orgScope(organizationId), id);
 }

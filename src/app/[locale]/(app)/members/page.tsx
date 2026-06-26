@@ -1,11 +1,9 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { currentOrganizationId, hasRole } from '@/lib/rbac';
-import { db } from '@/db/client';
-import { dojos } from '@/db/schema';
-import { listMembersForOrg } from '@/server/members/queries';
+import { getRoleAccessScope, isRoleAccessScopeEmpty } from '@/lib/rbac';
+import { listDojosForAccess } from '@/server/access';
+import { listMembersForAccess } from '@/server/members/queries';
 import { memberListQuerySchema, type MemberListQuery } from '@/server/members/schemas';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
@@ -32,14 +30,10 @@ export default async function MembersPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('members.list');
-  const tCommon = await getTranslations('common');
   const session = await auth();
-  const orgId = currentOrganizationId(session);
+  const accessScope = getRoleAccessScope(session, ['organization_admin', 'dojo_admin']);
 
-  if (!orgId) {
-    return <div>{tCommon('noOrganizationContext')}</div>;
-  }
-  if (!hasRole(session, ['organization_admin', 'dojo_admin'], { organizationId: orgId })) {
+  if (isRoleAccessScopeEmpty(accessScope)) {
     notFound();
   }
 
@@ -64,11 +58,8 @@ export default async function MembersPage({
   };
   const query = parsed.success ? parsed.data : fallbackQuery;
 
-  const { rows, total } = await listMembersForOrg(orgId, query);
-  const dojoOptions = await db
-    .select({ id: dojos.id, name: dojos.name })
-    .from(dojos)
-    .where(eq(dojos.organizationId, orgId));
+  const { rows, total } = await listMembersForAccess(accessScope, query);
+  const dojoOptions = await listDojosForAccess(accessScope);
 
   return (
     <section className={panelShellClass}>

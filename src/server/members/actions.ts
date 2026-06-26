@@ -1,12 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
   auditLog,
   classes,
-  dojos,
   memberClassAssignments,
   members,
   promotions,
@@ -15,7 +14,8 @@ import {
 } from '@/db/schema';
 import { auth } from '@/lib/auth';
 import { katakanaForFirstName } from '@/lib/katakana';
-import { currentOrganizationId, requireRole } from '@/lib/rbac';
+import { getRoleAccessScope, requireRole, type RoleAccessScope } from '@/lib/rbac';
+import { getActiveDojoForAccess } from '@/server/access';
 import {
   memberIdSchema,
   memberInputSchema,
@@ -45,25 +45,36 @@ export interface ActionResult<T = unknown> {
   fieldErrors?: Record<string, string[]>;
 }
 
-async function activeDojoInOrg(organizationId: string, dojoId: string) {
-  const [dojo] = await db
-    .select({ id: dojos.id })
-    .from(dojos)
-    .where(
-      and(eq(dojos.id, dojoId), eq(dojos.organizationId, organizationId), isNull(dojos.deletedAt)),
-    );
-  return dojo ?? null;
+function memberAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(members.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(members.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
+}
+
+function memberAccessFilters(scope: RoleAccessScope, id: string): SQL[] {
+  const filters: SQL[] = [eq(members.id, id), isNull(members.deletedAt)];
+  const accessFilter = memberAccessPredicate(scope);
+  if (accessFilter) filters.push(accessFilter);
+  return filters;
 }
 
 export async function createMemberAction(
   input: MemberInput,
 ): Promise<ActionResult<{ id: string }>> {
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = memberInputSchema.safeParse(input);
   if (!parsed.success) {
@@ -76,13 +87,13 @@ export async function createMemberAction(
   const v = parsed.data;
   const firstNameKatakana = v.firstNameKatakana ?? katakanaForFirstName(v.firstName);
   const auditAfter = { ...v, firstNameKatakana };
-  const dojo = await activeDojoInOrg(orgId, v.dojoId);
+  const dojo = await getActiveDojoForAccess(accessScope, v.dojoId);
   if (!dojo) return { ok: false, error: 'invalidDojo' };
 
   const [row] = await db
     .insert(members)
     .values({
-      organizationId: orgId,
+      organizationId: dojo.organizationId,
       dojoId: dojo.id,
       firstName: v.firstName,
       firstNameKatakana,
@@ -103,7 +114,7 @@ export async function createMemberAction(
     .returning({ id: members.id });
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: dojo.organizationId,
     actorUserId: session.user.id,
     action: 'member.create',
     entity: 'member',
@@ -124,11 +135,9 @@ export async function updateMemberAction(
   }
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = memberInputSchema.safeParse(input);
   if (!parsed.success) {
@@ -141,18 +150,19 @@ export async function updateMemberAction(
   const v = parsed.data;
   const firstNameKatakana = v.firstNameKatakana ?? katakanaForFirstName(v.firstName);
   const auditAfter = { ...v, firstNameKatakana };
-  const dojo = await activeDojoInOrg(orgId, v.dojoId);
+  const dojo = await getActiveDojoForAccess(accessScope, v.dojoId);
   if (!dojo) return { ok: false, error: 'invalidDojo' };
 
   const [before] = await db
     .select()
     .from(members)
-    .where(and(eq(members.id, id), eq(members.organizationId, orgId), isNull(members.deletedAt)));
+    .where(and(...memberAccessFilters(accessScope, id)));
   if (!before) return { ok: false, error: 'notFound' };
 
   await db
     .update(members)
     .set({
+      organizationId: dojo.organizationId,
       dojoId: dojo.id,
       firstName: v.firstName,
       firstNameKatakana: firstNameKatakana || null,
@@ -170,10 +180,10 @@ export async function updateMemberAction(
       updatedBy: session.user.id,
       updatedAt: new Date(),
     })
-    .where(and(eq(members.id, id), eq(members.organizationId, orgId), isNull(members.deletedAt)));
+    .where(and(...memberAccessFilters(accessScope, id)));
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: dojo.organizationId,
     actorUserId: session.user.id,
     action: 'member.update',
     entity: 'member',
@@ -194,11 +204,9 @@ export async function promoteMemberAction(
   if (!memberIdSchema.safeParse(id).success) return { ok: false, error: 'notFound' };
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin', 'instructor'], {
-    organizationId: orgId,
-  });
+  const allowedRoles = ['organization_admin', 'dojo_admin', 'instructor'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = promoteMemberSchema.safeParse(input);
   if (!parsed.success) {
@@ -211,9 +219,9 @@ export async function promoteMemberAction(
   const v = parsed.data;
 
   const [member] = await db
-    .select({ id: members.id })
+    .select({ id: members.id, organizationId: members.organizationId })
     .from(members)
-    .where(and(eq(members.id, id), eq(members.organizationId, orgId), isNull(members.deletedAt)));
+    .where(and(...memberAccessFilters(accessScope, id)));
   if (!member) return { ok: false, error: 'notFound' };
 
   const [target] = await db
@@ -222,7 +230,7 @@ export async function promoteMemberAction(
     .where(
       and(
         eq(rankDefinitions.id, v.targetRankDefinitionId),
-        eq(rankDefinitions.organizationId, orgId),
+        eq(rankDefinitions.organizationId, member.organizationId),
         isNull(rankDefinitions.deletedAt),
       ),
     );
@@ -261,7 +269,7 @@ export async function promoteMemberAction(
       notes: v.notes,
     });
     await tx.insert(auditLog).values({
-      organizationId: orgId,
+      organizationId: member.organizationId,
       actorUserId: session.user.id,
       action: 'member.promote',
       entity: 'member',
@@ -282,9 +290,9 @@ export async function updateMemberStatusAction(
   if (!memberIdSchema.safeParse(id).success) return { ok: false, error: 'notFound' };
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin'], { organizationId: orgId });
+  const allowedRoles = ['organization_admin', 'dojo_admin'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = memberStatusUpdateSchema.safeParse(input);
   if (!parsed.success) {
@@ -299,16 +307,16 @@ export async function updateMemberStatusAction(
   const [before] = await db
     .select()
     .from(members)
-    .where(and(eq(members.id, id), eq(members.organizationId, orgId), isNull(members.deletedAt)));
+    .where(and(...memberAccessFilters(accessScope, id)));
   if (!before) return { ok: false, error: 'notFound' };
 
   await db
     .update(members)
     .set({ status: v.status, updatedBy: session.user.id, updatedAt: new Date() })
-    .where(eq(members.id, id));
+    .where(and(...memberAccessFilters(accessScope, id)));
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: before.organizationId,
     actorUserId: session.user.id,
     action: 'member.status_update',
     entity: 'member',
@@ -329,9 +337,9 @@ export async function transferMemberDojoAction(
   if (!memberIdSchema.safeParse(id).success) return { ok: false, error: 'notFound' };
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin', 'dojo_admin'], { organizationId: orgId });
+  const allowedRoles = ['organization_admin', 'dojo_admin'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
 
   const parsed = memberTransferSchema.safeParse(input);
   if (!parsed.success) {
@@ -343,20 +351,25 @@ export async function transferMemberDojoAction(
   }
   const v = parsed.data;
 
-  const targetDojo = await activeDojoInOrg(orgId, v.targetDojoId);
+  const targetDojo = await getActiveDojoForAccess(accessScope, v.targetDojoId);
   if (!targetDojo) return { ok: false, error: 'invalidDojo' };
 
   const [before] = await db
     .select()
     .from(members)
-    .where(and(eq(members.id, id), eq(members.organizationId, orgId), isNull(members.deletedAt)));
+    .where(and(...memberAccessFilters(accessScope, id)));
   if (!before) return { ok: false, error: 'notFound' };
 
   await db.transaction(async (tx) => {
     await tx
       .update(members)
-      .set({ dojoId: targetDojo.id, updatedBy: session.user.id, updatedAt: new Date() })
-      .where(eq(members.id, id));
+      .set({
+        organizationId: targetDojo.organizationId,
+        dojoId: targetDojo.id,
+        updatedBy: session.user.id,
+        updatedAt: new Date(),
+      })
+      .where(and(...memberAccessFilters(accessScope, id)));
     await tx
       .update(memberClassAssignments)
       .set({ endedAt: new Date() })
@@ -368,12 +381,15 @@ export async function transferMemberDojoAction(
             SELECT 1
             FROM ${classes}
             WHERE ${classes.id} = ${memberClassAssignments.classId}
-              AND ${classes.dojoId} <> ${targetDojo.id}
+              AND (
+                ${classes.organizationId} <> ${targetDojo.organizationId}
+                OR ${classes.dojoId} <> ${targetDojo.id}
+              )
           )`,
         ),
       );
     await tx.insert(auditLog).values({
-      organizationId: orgId,
+      organizationId: targetDojo.organizationId,
       actorUserId: session.user.id,
       action: 'member.transfer_dojo',
       entity: 'member',
@@ -394,17 +410,23 @@ export async function softDeleteMemberAction(id: string): Promise<ActionResult> 
   }
 
   const raw = await auth();
-  const orgId = currentOrganizationId(raw);
-  if (!orgId) return { ok: false, error: 'noOrganizationContext' };
-  const session = requireRole(raw, ['organization_admin'], { organizationId: orgId });
+  const allowedRoles = ['organization_admin'] as const;
+  const session = requireRole(raw, allowedRoles);
+  const accessScope = getRoleAccessScope(session, allowedRoles);
+
+  const [before] = await db
+    .select()
+    .from(members)
+    .where(and(...memberAccessFilters(accessScope, id)));
+  if (!before) return { ok: false, error: 'notFound' };
 
   await db
     .update(members)
     .set({ deletedAt: new Date(), updatedBy: session.user.id })
-    .where(and(eq(members.id, id), eq(members.organizationId, orgId)));
+    .where(and(...memberAccessFilters(accessScope, id)));
 
   await db.insert(auditLog).values({
-    organizationId: orgId,
+    organizationId: before.organizationId,
     actorUserId: session.user.id,
     action: 'member.delete',
     entity: 'member',

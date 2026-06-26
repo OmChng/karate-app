@@ -101,6 +101,11 @@ interface Props {
   promotions: MemberPromotionView[];
   blackBeltLeagueResults: MemberLeagueResultView[];
   rankOptions: MemberRankOptionView[];
+  canEditMember: boolean;
+  canTransferMember: boolean;
+  canUpdateStatus: boolean;
+  canPromote: boolean;
+  canManageClasses: boolean;
 }
 
 const BUTTON_BASE =
@@ -116,6 +121,11 @@ export default function MemberDetailClient({
   promotions,
   blackBeltLeagueResults,
   rankOptions,
+  canEditMember,
+  canTransferMember,
+  canUpdateStatus,
+  canPromote,
+  canManageClasses,
 }: Props) {
   const t = useTranslations('members.detail');
   const tStatus = useTranslations('members.list.status');
@@ -136,16 +146,18 @@ export default function MemberDetailClient({
           {t('back')}
         </Link>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex">
-          <PromoteSheet member={member} rankOptions={rankOptions} />
-          <Link
-            href={{ pathname: '/members/[id]/edit', params: { id: member.id } }}
-            className={cn(BUTTON_BASE, 'border border-border hover:bg-secondary')}
-          >
-            <Edit className="h-4 w-4" aria-hidden />
-            {t('actions.edit')}
-          </Link>
-          <TransferSheet member={member} dojos={dojos} />
-          <StatusSheet member={member} />
+          {canPromote && <PromoteSheet member={member} rankOptions={rankOptions} />}
+          {canEditMember && (
+            <Link
+              href={{ pathname: '/members/[id]/edit', params: { id: member.id } }}
+              className={cn(BUTTON_BASE, 'border border-border hover:bg-secondary')}
+            >
+              <Edit className="h-4 w-4" aria-hidden />
+              {t('actions.edit')}
+            </Link>
+          )}
+          {canTransferMember && <TransferSheet member={member} dojos={dojos} />}
+          {canUpdateStatus && <StatusSheet member={member} />}
         </div>
       </div>
 
@@ -208,6 +220,7 @@ export default function MemberDetailClient({
         memberId={member.id}
         activeClasses={activeClasses}
         assignableClasses={assignableClasses}
+        canManageClasses={canManageClasses}
       />
 
       <section className={cn('grid grid-cols-1 gap-4', showBlackBeltLeague && 'xl:grid-cols-2')}>
@@ -497,10 +510,12 @@ function ClassesSection({
   memberId,
   activeClasses,
   assignableClasses,
+  canManageClasses,
 }: {
   memberId: string;
   activeClasses: MemberClassView[];
   assignableClasses: Props['assignableClasses'];
+  canManageClasses: boolean;
 }) {
   const t = useTranslations('members.detail');
   const router = useRouter();
@@ -557,19 +572,21 @@ function ClassesSection({
                   {classRow.name} · {classRow.dojoName}
                 </div>
               </div>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => remove(classRow.id)}
-                className={cn(BUTTON_BASE, 'border border-border hover:bg-secondary')}
-              >
-                {pending && <ButtonSpinner />}
-                {t('classActions.remove')}
-              </button>
+              {canManageClasses && (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => remove(classRow.id)}
+                  className={cn(BUTTON_BASE, 'border border-border hover:bg-secondary')}
+                >
+                  {pending && <ButtonSpinner />}
+                  {t('classActions.remove')}
+                </button>
+              )}
             </div>
           ))
         )}
-        {assignableClasses.length > 0 && (
+        {canManageClasses && assignableClasses.length > 0 && (
           <form
             onSubmit={assign}
             className="flex flex-col gap-2 border-t border-border pt-3 md:flex-row"

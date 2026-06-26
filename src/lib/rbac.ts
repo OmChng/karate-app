@@ -27,6 +27,12 @@ export interface AccessScope {
   dojoId?: string;
 }
 
+export interface RoleAccessScope {
+  global: boolean;
+  organizationIds: string[];
+  dojoIds: string[];
+}
+
 /**
  * Implicit role hierarchy — listing one of these accepts any role
  * higher up the chain too.
@@ -41,6 +47,8 @@ const ROLE_INHERITS: Partial<Record<UserRole, UserRole[]>> = {
   organization_admin: ['super_admin'],
 };
 
+const ORGANIZATION_WIDE_ROLES = new Set<UserRole>(['organization_admin', 'finance_staff']);
+
 function expandRoles(roles: readonly UserRole[]): Set<UserRole> {
   const out = new Set<UserRole>();
   for (const r of roles) {
@@ -49,6 +57,10 @@ function expandRoles(roles: readonly UserRole[]): Set<UserRole> {
   }
   out.add('super_admin');
   return out;
+}
+
+export function isSuperAdmin(session: Session | null): boolean {
+  return session?.user?.roles?.some((role) => role.role === 'super_admin') ?? false;
 }
 
 export function hasRole(
@@ -60,10 +72,70 @@ export function hasRole(
   const accepted = expandRoles(allowed);
   return session.user.roles.some((r) => {
     if (!accepted.has(r.role)) return false;
+    if (r.role === 'super_admin') return true;
     if (scope.organizationId && r.organizationId !== scope.organizationId) return false;
-    if (scope.dojoId && r.dojoId && r.dojoId !== scope.dojoId) return false;
+    if (scope.dojoId) {
+      if (r.dojoId && r.dojoId !== scope.dojoId) return false;
+      return true;
+    }
+    if (scope.organizationId && r.dojoId) return false;
     return true;
   });
+}
+
+export function getRoleAccessScope(
+  session: Session | null,
+  allowed: readonly UserRole[],
+  scope: Pick<AccessScope, 'organizationId'> = {},
+): RoleAccessScope {
+  if (!session?.user?.roles) return { global: false, organizationIds: [], dojoIds: [] };
+
+  const accepted = expandRoles(allowed);
+  const organizationIds = new Set<string>();
+  const dojoIds = new Set<string>();
+
+  for (const role of session.user.roles) {
+    if (!accepted.has(role.role)) continue;
+    if (role.role === 'super_admin') return { global: true, organizationIds: [], dojoIds: [] };
+    if (scope.organizationId && role.organizationId !== scope.organizationId) continue;
+
+    if (role.dojoId) {
+      dojoIds.add(role.dojoId);
+      continue;
+    }
+
+    if (ORGANIZATION_WIDE_ROLES.has(role.role)) {
+      organizationIds.add(role.organizationId);
+    }
+  }
+
+  return {
+    global: false,
+    organizationIds: [...organizationIds],
+    dojoIds: [...dojoIds],
+  };
+}
+
+export function isRoleAccessScopeEmpty(scope: RoleAccessScope): boolean {
+  return !scope.global && scope.organizationIds.length === 0 && scope.dojoIds.length === 0;
+}
+
+export function scopeCanAccessOrganization(
+  scope: RoleAccessScope,
+  organizationId: string,
+): boolean {
+  return scope.global || scope.organizationIds.includes(organizationId);
+}
+
+export function scopeCanAccessDojo(
+  scope: RoleAccessScope,
+  dojo: { id: string; organizationId: string },
+): boolean {
+  return (
+    scope.global ||
+    scope.organizationIds.includes(dojo.organizationId) ||
+    scope.dojoIds.includes(dojo.id)
+  );
 }
 
 export function requireSession(session: Session | null): asserts session is Session {

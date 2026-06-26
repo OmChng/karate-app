@@ -4,12 +4,18 @@ import {
   ForbiddenError,
   UnauthenticatedError,
   currentOrganizationId,
+  getRoleAccessScope,
   hasRole,
+  isSuperAdmin,
   requireRole,
+  scopeCanAccessDojo,
+  scopeCanAccessOrganization,
 } from '../../src/lib/rbac';
 
 const ORG = '00000000-0000-0000-0000-000000000001';
+const OTHER_ORG = '00000000-0000-0000-0000-000000000003';
 const DOJO = '00000000-0000-0000-0000-000000000002';
+const OTHER_DOJO = '00000000-0000-0000-0000-000000000004';
 
 function sessionWith(roles: Session['user']['roles']): Session {
   return {
@@ -45,10 +51,60 @@ describe('hasRole', () => {
     expect(hasRole(s, ['organization_admin'], { organizationId: 'other' })).toBe(false);
   });
 
+  it('lets super_admin bypass organization and dojo scopes', () => {
+    const s = sessionWith([{ organizationId: ORG, dojoId: null, role: 'super_admin' }]);
+    expect(isSuperAdmin(s)).toBe(true);
+    expect(hasRole(s, ['organization_admin'], { organizationId: OTHER_ORG })).toBe(true);
+    expect(hasRole(s, ['instructor'], { organizationId: OTHER_ORG, dojoId: OTHER_DOJO })).toBe(
+      true,
+    );
+  });
+
   it('respects dojo scope when present', () => {
     const s = sessionWith([{ organizationId: ORG, dojoId: DOJO, role: 'instructor' }]);
     expect(hasRole(s, ['instructor'], { organizationId: ORG, dojoId: DOJO })).toBe(true);
     expect(hasRole(s, ['instructor'], { organizationId: ORG, dojoId: 'other' })).toBe(false);
+  });
+
+  it('does not let dojo-scoped roles satisfy organization-wide checks', () => {
+    const s = sessionWith([{ organizationId: ORG, dojoId: DOJO, role: 'dojo_admin' }]);
+    expect(hasRole(s, ['dojo_admin'], { organizationId: ORG })).toBe(false);
+    expect(hasRole(s, ['dojo_admin'], { organizationId: ORG, dojoId: DOJO })).toBe(true);
+    expect(hasRole(s, ['organization_admin'], { organizationId: ORG })).toBe(false);
+  });
+
+  it('lets organization_admin satisfy lower roles inside the organization', () => {
+    const s = sessionWith([{ organizationId: ORG, dojoId: null, role: 'organization_admin' }]);
+    expect(hasRole(s, ['instructor'], { organizationId: ORG, dojoId: OTHER_DOJO })).toBe(true);
+    expect(hasRole(s, ['dojo_admin'], { organizationId: ORG, dojoId: OTHER_DOJO })).toBe(true);
+  });
+});
+
+describe('getRoleAccessScope', () => {
+  it('returns global scope for super_admin', () => {
+    const s = sessionWith([{ organizationId: ORG, dojoId: null, role: 'super_admin' }]);
+    const scope = getRoleAccessScope(s, ['organization_admin']);
+    expect(scope).toEqual({ global: true, organizationIds: [], dojoIds: [] });
+    expect(scopeCanAccessOrganization(scope, OTHER_ORG)).toBe(true);
+    expect(scopeCanAccessDojo(scope, { id: OTHER_DOJO, organizationId: OTHER_ORG })).toBe(true);
+  });
+
+  it('returns organization-wide scope for organization_admin', () => {
+    const s = sessionWith([{ organizationId: ORG, dojoId: null, role: 'organization_admin' }]);
+    const scope = getRoleAccessScope(s, ['dojo_admin']);
+    expect(scope).toEqual({ global: false, organizationIds: [ORG], dojoIds: [] });
+    expect(scopeCanAccessOrganization(scope, ORG)).toBe(true);
+    expect(scopeCanAccessDojo(scope, { id: OTHER_DOJO, organizationId: ORG })).toBe(true);
+    expect(scopeCanAccessDojo(scope, { id: OTHER_DOJO, organizationId: OTHER_ORG })).toBe(false);
+  });
+
+  it('returns assigned-dojo scope for dojo roles', () => {
+    const s = sessionWith([{ organizationId: ORG, dojoId: DOJO, role: 'dojo_admin' }]);
+    const scope = getRoleAccessScope(s, ['dojo_admin']);
+    expect(scope).toEqual({ global: false, organizationIds: [], dojoIds: [DOJO] });
+    expect(scopeCanAccessOrganization(scope, ORG)).toBe(false);
+    expect(scopeCanAccessDojo(scope, { id: DOJO, organizationId: ORG })).toBe(true);
+    expect(scopeCanAccessDojo(scope, { id: OTHER_DOJO, organizationId: ORG })).toBe(false);
   });
 });
 

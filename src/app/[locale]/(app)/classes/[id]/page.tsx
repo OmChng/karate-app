@@ -1,11 +1,9 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { and, eq, isNull } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
-import { db } from '@/db/client';
-import { dojos } from '@/db/schema';
-import { currentOrganizationId } from '@/lib/rbac';
-import { getClassDetail } from '@/server/classes/queries';
+import { getRoleAccessScope, isRoleAccessScopeEmpty } from '@/lib/rbac';
+import { listDojosForAccess } from '@/server/access';
+import { getClassDetailForAccess } from '@/server/classes/queries';
 import ClassDetailClient from './class-detail-client';
 
 export async function generateMetadata({
@@ -16,9 +14,13 @@ export async function generateMetadata({
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: 'classes.detail' });
   const session = await auth();
-  const orgId = currentOrganizationId(session);
-  if (!orgId) return { title: t('fallbackTitle') };
-  const data = await getClassDetail(orgId, id);
+  const accessScope = getRoleAccessScope(session, [
+    'organization_admin',
+    'dojo_admin',
+    'instructor',
+  ]);
+  if (isRoleAccessScopeEmpty(accessScope)) return { title: t('fallbackTitle') };
+  const data = await getClassDetailForAccess(accessScope, id);
   return { title: data?.name ?? t('fallbackTitle') };
 }
 
@@ -30,14 +32,15 @@ export default async function Page({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const session = await auth();
-  const orgId = currentOrganizationId(session);
-  if (!orgId) notFound();
-  const data = await getClassDetail(orgId, id);
+  const accessScope = getRoleAccessScope(session, [
+    'organization_admin',
+    'dojo_admin',
+    'instructor',
+  ]);
+  if (isRoleAccessScopeEmpty(accessScope)) notFound();
+  const data = await getClassDetailForAccess(accessScope, id);
   if (!data) notFound();
-  const dojoOptions = await db
-    .select({ id: dojos.id, name: dojos.name })
-    .from(dojos)
-    .where(and(eq(dojos.organizationId, orgId), isNull(dojos.deletedAt)));
+  const dojoOptions = await listDojosForAccess(accessScope);
 
   return (
     <ClassDetailClient

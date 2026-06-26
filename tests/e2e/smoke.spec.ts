@@ -1,7 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const admin = {
-  identifier: 'admin@sensei.local',
+  identifier: 'superadmin@sensei.local',
+  password: 'superadmin1234',
+};
+
+const bugambiliasAdmin = {
+  identifier: 'admin.bugambilias@sensei.local',
   password: 'admin1234',
 };
 
@@ -61,19 +66,23 @@ async function expectDocumentOk(page: Page, href: string) {
   return response!;
 }
 
-async function signInAsAdmin(page: Page) {
+async function signIn(page: Page, credentials: { identifier: string; password: string }) {
   await expectDocumentOk(page, '/iniciar-sesion');
   const identifier = page.getByLabel('Email o teléfono');
   const password = page.getByLabel('Contraseña');
   await expect(identifier).toBeEnabled({ timeout: 15_000 });
   await expect(password).toBeEnabled({ timeout: 15_000 });
-  await identifier.fill(admin.identifier);
-  await password.fill(admin.password);
+  await identifier.fill(credentials.identifier);
+  await password.fill(credentials.password);
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Inicio' })).toBeVisible({
     timeout: 15_000,
   });
   await expect(page).toHaveURL('/app');
+}
+
+async function signInAsAdmin(page: Page) {
+  await signIn(page, admin);
 }
 
 async function getMemberHrefByCode(page: Page, code: string) {
@@ -376,6 +385,39 @@ test.describe('Smoke', () => {
 
     await signInAsAdmin(page);
     await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
+  });
+
+  test('role scopes show the right seeded academies', async ({ page }, testInfo) => {
+    test.setTimeout(60_000);
+    test.skip(testInfo.project.name !== 'chromium', 'Scoped academy visibility runs once.');
+
+    await signInAsAdmin(page);
+    await expectDocumentOk(page, '/clases');
+    for (const dojoName of [
+      'Bosques de Santa Anita',
+      'Bugambilias',
+      'Las Águilas',
+      'San Agustín',
+    ]) {
+      await expect(page.locator('tbody').getByText(dojoName).first()).toBeVisible();
+    }
+    await expectDocumentOk(page, '/miembros?q=BUG-001&pageSize=100');
+    await expect(
+      page.getByRole('link', { name: /Ver detalle de Aitana Bravo Medina/ }),
+    ).toBeVisible();
+
+    await page.context().clearCookies();
+    await signIn(page, bugambiliasAdmin);
+    await expectDocumentOk(page, '/clases');
+    await expect(page.locator('tbody').getByText('Bugambilias').first()).toBeVisible();
+    await expect(page.locator('tbody').getByText('Bosques de Santa Anita')).toHaveCount(0);
+
+    await expectDocumentOk(page, '/miembros?q=BUG-001&pageSize=100');
+    await expect(
+      page.getByRole('link', { name: /Ver detalle de Aitana Bravo Medina/ }),
+    ).toBeVisible();
+    await expectDocumentOk(page, '/miembros?q=CTR-R07&pageSize=100');
+    await expect(page.getByRole('link', { name: /Ver detalle de / })).toHaveCount(0);
   });
 
   test('theme toggle switches modes and persists after reload', async ({ page }, testInfo) => {

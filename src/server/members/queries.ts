@@ -1,4 +1,17 @@
-import { and, asc, count, desc, eq, gte, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
   attendance,
@@ -13,6 +26,7 @@ import {
   promotions,
 } from '@/db/schema';
 import { formatClassSchedule } from '@/lib/class-schedule';
+import type { RoleAccessScope } from '@/lib/rbac';
 import {
   memberIdSchema,
   monthlyAbsenceTone,
@@ -101,14 +115,36 @@ function currentMonthStart(today = new Date()) {
   return new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
 }
 
-export async function listMembersForOrg(
-  organizationId: string,
+function orgScope(organizationId: string): RoleAccessScope {
+  return { global: false, organizationIds: [organizationId], dojoIds: [] };
+}
+
+function memberAccessPredicate(scope: RoleAccessScope): SQL | undefined {
+  if (scope.global) return undefined;
+
+  const predicates: SQL[] = [];
+  if (scope.organizationIds.length > 0) {
+    predicates.push(inArray(members.organizationId, scope.organizationIds));
+  }
+  if (scope.dojoIds.length > 0) {
+    predicates.push(inArray(members.dojoId, scope.dojoIds));
+  }
+
+  if (predicates.length === 0) return sql`false`;
+  if (predicates.length === 1) return predicates[0];
+  return or(...predicates) ?? sql`false`;
+}
+
+export async function listMembersForAccess(
+  accessScope: RoleAccessScope,
   q: MemberListQuery,
 ): Promise<{ rows: MemberRow[]; total: number }> {
   const offset = (q.page - 1) * q.pageSize;
   const monthStart = currentMonthStart();
 
-  const filters = [eq(members.organizationId, organizationId), isNull(members.deletedAt)];
+  const filters: SQL[] = [isNull(members.deletedAt)];
+  const accessFilter = memberAccessPredicate(accessScope);
+  if (accessFilter) filters.push(accessFilter);
   if (q.status) filters.push(eq(members.status, q.status));
   if (q.dojoId) filters.push(eq(members.dojoId, q.dojoId));
   if (q.q && q.q.length > 0) {
@@ -231,12 +267,24 @@ export async function listMembersForOrg(
   };
 }
 
-export async function getMemberById(organizationId: string, id: string) {
+export async function listMembersForOrg(
+  organizationId: string,
+  q: MemberListQuery,
+): Promise<{ rows: MemberRow[]; total: number }> {
+  return listMembersForAccess(orgScope(organizationId), q);
+}
+
+export async function getMemberByIdForAccess(accessScope: RoleAccessScope, id: string) {
   if (!memberIdSchema.safeParse(id).success) return null;
+
+  const filters: SQL[] = [eq(members.id, id), isNull(members.deletedAt)];
+  const accessFilter = memberAccessPredicate(accessScope);
+  if (accessFilter) filters.push(accessFilter);
 
   const [row] = await db
     .select({
       id: members.id,
+      organizationId: members.organizationId,
       firstName: members.firstName,
       firstNameKatakana: members.firstNameKatakana,
       lastName: members.lastName,
@@ -264,18 +312,16 @@ export async function getMemberById(organizationId: string, id: string) {
     .leftJoin(files, eq(files.id, members.avatarFileId))
     .leftJoin(ranks, and(eq(ranks.memberId, members.id), eq(ranks.isCurrent, sql`true`)))
     .leftJoin(rankDefinitions, eq(rankDefinitions.id, ranks.rankDefinitionId))
-    .where(
-      and(
-        eq(members.id, id),
-        eq(members.organizationId, organizationId),
-        isNull(members.deletedAt),
-      ),
-    );
+    .where(and(...filters));
   return row ?? null;
 }
 
-export async function getMemberDetailData(organizationId: string, id: string) {
-  const member = await getMemberById(organizationId, id);
+export async function getMemberById(organizationId: string, id: string) {
+  return getMemberByIdForAccess(orgScope(organizationId), id);
+}
+
+export async function getMemberDetailDataForAccess(accessScope: RoleAccessScope, id: string) {
+  const member = await getMemberByIdForAccess(accessScope, id);
   if (!member) return null;
 
   const activeClasses = await db
@@ -294,6 +340,7 @@ export async function getMemberDetailData(organizationId: string, id: string) {
     .where(
       and(
         eq(memberClassAssignments.memberId, member.id),
+        eq(classes.organizationId, member.organizationId),
         isNull(memberClassAssignments.endedAt),
         isNull(classes.deletedAt),
       ),
@@ -329,7 +376,7 @@ export async function getMemberDetailData(organizationId: string, id: string) {
     .where(
       and(
         eq(blackBeltLeagueResults.memberId, member.id),
-        eq(blackBeltLeagueResults.organizationId, organizationId),
+        eq(blackBeltLeagueResults.organizationId, member.organizationId),
       ),
     )
     .orderBy(desc(blackBeltLeagueResults.eventDate), desc(blackBeltLeagueResults.createdAt));
@@ -343,7 +390,10 @@ export async function getMemberDetailData(organizationId: string, id: string) {
     })
     .from(rankDefinitions)
     .where(
-      and(eq(rankDefinitions.organizationId, organizationId), isNull(rankDefinitions.deletedAt)),
+      and(
+        eq(rankDefinitions.organizationId, member.organizationId),
+        isNull(rankDefinitions.deletedAt),
+      ),
     )
     .orderBy(asc(rankDefinitions.level));
 
@@ -360,7 +410,7 @@ export async function getMemberDetailData(organizationId: string, id: string) {
     .innerJoin(dojos, eq(dojos.id, classes.dojoId))
     .where(
       and(
-        eq(classes.organizationId, organizationId),
+        eq(classes.organizationId, member.organizationId),
         eq(classes.dojoId, member.dojoId),
         isNull(classes.deletedAt),
       ),
@@ -397,4 +447,8 @@ export async function getMemberDetailData(organizationId: string, id: string) {
         }),
       ),
   };
+}
+
+export async function getMemberDetailData(organizationId: string, id: string) {
+  return getMemberDetailDataForAccess(orgScope(organizationId), id);
 }
