@@ -7,10 +7,13 @@ export function ContactCtaSection() {
   const t = useTranslations('publicHome.contact');
 
   return (
-    <section id="contacto" className="bg-[#0b0f14] py-16 text-white md:py-20">
+    <section
+      id="contacto"
+      className="bg-white py-16 text-[#10131a] dark:bg-[#0b0f14] dark:text-white md:py-20"
+    >
       <div className="container">
         <StaggerContainer
-          className="grid gap-8 overflow-hidden border border-white/[0.12] bg-white/[0.06] p-6 md:grid-cols-[1fr_auto] md:items-center md:p-10"
+          className="grid gap-8 overflow-hidden border border-[#10131a] bg-[#10131a] p-6 text-white shadow-2xl shadow-[#10131a]/15 dark:border-white/[0.12] dark:bg-white/[0.06] dark:shadow-none md:grid-cols-[1fr_auto] md:items-center md:p-10"
           staggerDelay={0.1}
           amount={0.35}
         >

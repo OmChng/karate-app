@@ -407,6 +407,7 @@
     "passwordLabel": "Password",
     "submit": "Sign in",
     "submitting": "Signing in…",
+    "returnToPublicSite": "Back to main website",
     "forgotPassword": "Forgot your password?",
     "invalidCredentials": "Invalid credentials",
     "signedInAs": "Signed in as {name}"

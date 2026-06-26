@@ -16,7 +16,7 @@ export function PublicHeader() {
   const t = useTranslations('publicHome');
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b0f14]/95 text-white backdrop-blur supports-[backdrop-filter]:bg-[#0b0f14]/[0.85]">
+    <header className="sticky top-0 z-40 border-b border-[#e5e7eb] bg-white/95 text-[#10131a] shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/[0.86] dark:border-white/10 dark:bg-[#0b0f14]/95 dark:text-white dark:shadow-none dark:supports-[backdrop-filter]:bg-[#0b0f14]/[0.85]">
       <InitialReveal
         className="container grid gap-3 py-4 lg:flex lg:items-center lg:gap-4"
         y={-12}
@@ -30,10 +30,12 @@ export function PublicHeader() {
         >
           <span className="brand-mark h-10 w-10 shrink-0 rounded-md" aria-hidden />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold uppercase tracking-[0.18em] text-white">
+            <span className="block truncate text-sm font-semibold uppercase tracking-[0.18em] text-[#10131a] dark:text-white">
               {t('brand.name')}
             </span>
-            <span className="block truncate text-xs text-white/60">{t('brand.tagline')}</span>
+            <span className="block truncate text-xs text-[#4b5563] dark:text-white/60">
+              {t('brand.tagline')}
+            </span>
           </span>
         </a>
         <nav
@@ -44,13 +46,13 @@ export function PublicHeader() {
             <a
               key={item.key}
               href={item.href}
-              className="inline-flex min-h-11 shrink-0 items-center rounded-md px-3 text-sm font-medium text-white/[0.72] transition-colors duration-fast ease-standard hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-md px-3 text-sm font-medium text-[#4b5563] transition-colors duration-fast ease-standard hover:bg-[#f3f4f6] hover:text-[#10131a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-white/[0.72] dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:ring-white"
             >
               {t(`nav.${item.key}`)}
             </a>
           ))}
           <PublicLanguageSwitcher />
-          <ThemeToggleButton className="border-white/20 text-white hover:bg-white/10 hover:text-white focus-visible:ring-white" />
+          <ThemeToggleButton className="border-[#d1d5db] text-[#10131a] hover:bg-[#f3f4f6] hover:text-[#10131a] focus-visible:ring-ring dark:border-white/20 dark:text-white dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:ring-white" />
           <Link
             href="/login"
             locale="es"

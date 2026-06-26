@@ -1,4 +1,5 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { redirect } from '@/i18n/routing';
 import LoginForm from './login-form';
@@ -29,6 +30,8 @@ export default async function LoginPage({
     redirect({ href: safeNext as never, locale });
   }
 
+  const t = await getTranslations({ locale, namespace: 'auth' });
+
   return (
     <main
       id="main"
@@ -38,6 +41,14 @@ export default async function LoginPage({
         <div className="p-8">
           <div className="brand-mark mx-auto mb-6 h-10 w-10 rounded-lg" aria-hidden />
           <LoginForm next={search.next} error={search.error} />
+          <div className="mt-6 border-t border-border pt-5 text-center">
+            <Link
+              href="/"
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-input px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {t('returnToPublicSite')}
+            </Link>
+          </div>
         </div>
       </div>
     </main>

@@ -280,7 +280,7 @@ test.describe('Smoke', () => {
         'Noticias',
         'Contacto',
         'Español/English',
-        'Cambiar a modo oscuro',
+        'Cambiar a modo claro',
         'Ingresar al sistema',
       ]);
     await expect(page.getByLabel('Tu dirección o código postal')).toBeVisible();
@@ -299,7 +299,7 @@ test.describe('Smoke', () => {
       page.getByText('Boulevard Bosques de Santa Anita 2355-28, San Agustín'),
     ).toBeVisible();
     await expect(page.getByText('Karate infantil')).toBeVisible();
-    await expect(page.locator('html')).not.toHaveClass(/dark/);
+    await expect(page.locator('html')).toHaveClass(/dark/);
     await expect
       .poll(() =>
         page.locator('.public-site').evaluate((node) => {
@@ -323,7 +323,7 @@ test.describe('Smoke', () => {
           return window.getComputedStyle(node).backgroundColor;
         }),
       )
-      .toBe('rgb(247, 248, 250)');
+      .toBe('rgb(16, 19, 26)');
     await expect
       .poll(() =>
         page.locator('#programas').evaluate((node) => {
@@ -334,15 +334,32 @@ test.describe('Smoke', () => {
 
     await page.waitForLoadState('networkidle');
     await themeButton.click();
-    await expect(themeButton).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(themeButton).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('html')).not.toHaveClass(/dark/);
+    await expect
+      .poll(() =>
+        page.locator('.public-site').evaluate((node) => {
+          return window.getComputedStyle(node).backgroundColor;
+        }),
+      )
+      .toBe('rgb(247, 248, 250)');
+    await expect
+      .poll(() =>
+        page
+          .locator('#main > section')
+          .first()
+          .evaluate((node) => {
+            return window.getComputedStyle(node).backgroundColor;
+          }),
+      )
+      .toBe('rgb(247, 248, 250)');
     await expect
       .poll(() =>
         page.locator('#quienes-somos').evaluate((node) => {
           return window.getComputedStyle(node).backgroundColor;
         }),
       )
-      .toBe('rgb(16, 19, 26)');
+      .toBe('rgb(247, 248, 250)');
     await expect
       .poll(() =>
         page
@@ -352,11 +369,15 @@ test.describe('Smoke', () => {
             return window.getComputedStyle(node).backgroundColor;
           }),
       )
-      .toBe('rgb(23, 27, 36)');
+      .toBe('rgb(255, 255, 255)');
 
     await page.getByRole('link', { name: 'Ingresar al sistema' }).first().click();
     await expect(page).toHaveURL(/\/iniciar-sesion$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Volver al sitio principal' })).toHaveAttribute(
+      'href',
+      '/',
+    );
     await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
 
     expect(runtimeErrors).toEqual([]);
@@ -367,10 +388,14 @@ test.describe('Smoke', () => {
 
     await expectDocumentOk(page, '/iniciar-sesion');
     await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
-    await expect(page.locator('html')).not.toHaveClass(/dark/);
+    await expect(page.locator('html')).toHaveClass(/dark/);
     await expect(page.locator('.brand-mark')).toBeVisible();
     await expect(page.locator('.palette-rule')).toHaveCount(0);
     await expect(page.getByRole('group', { name: 'Selector de idioma' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Volver al sitio principal' })).toHaveAttribute(
+      'href',
+      '/',
+    );
     await expect(page.getByLabel('Email o teléfono')).toBeVisible();
     await expect(page.getByLabel('Contraseña')).toBeVisible();
 

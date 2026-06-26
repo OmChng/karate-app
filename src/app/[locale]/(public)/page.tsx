@@ -24,7 +24,7 @@ export default async function PublicHomePage({ params }: { params: Promise<{ loc
   setRequestLocale(locale);
 
   return (
-    <div className="public-site min-h-screen bg-[#0b0f14] text-white">
+    <div className="public-site min-h-screen bg-[#f7f8fa] text-[#10131a] dark:bg-[#0b0f14] dark:text-white">
       <PublicHeader />
       <main id="main">
         <HeroSection />

@@ -23,12 +23,12 @@ export function HeroSection() {
   }));
 
   return (
-    <section className="relative overflow-hidden border-b border-white/10 bg-[#0b0f14]">
-      <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(228,61,48,0.22),transparent_38%,rgba(24,59,91,0.28))]" />
+    <section className="relative overflow-hidden border-b border-[#e5e7eb] bg-[#f7f8fa] dark:border-white/10 dark:bg-[#0b0f14]">
+      <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(228,61,48,0.12),transparent_42%,rgba(24,59,91,0.1))] dark:bg-[linear-gradient(110deg,rgba(228,61,48,0.22),transparent_38%,rgba(24,59,91,0.28))]" />
       <div className="container relative grid gap-10 py-12 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.78fr)] md:items-center md:py-16 lg:gap-14 lg:py-20">
         <div className="max-w-3xl">
           <InitialReveal delay={0.04} y={24} blur={4} duration={0.56}>
-            <p className="mb-5 inline-flex rounded-md border border-white/[0.15] bg-white/[0.08] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+            <p className="mb-5 inline-flex rounded-md border border-[#d1d5db] bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#4b5563] shadow-sm dark:border-white/[0.15] dark:bg-white/[0.08] dark:text-white/70 dark:shadow-none">
               {t('hero.eyebrow')}
             </p>
           </InitialReveal>
@@ -36,10 +36,10 @@ export function HeroSection() {
             finalText={t('hero.title')}
             prefix={t('hero.animatedTitle.prefix')}
             terms={titleTerms}
-            className="public-typing-title-hero text-balance text-5xl font-black leading-[0.95] tracking-normal text-white md:text-6xl lg:text-7xl"
+            className="public-typing-title-hero text-balance text-5xl font-black leading-[0.95] tracking-normal text-[#10131a] dark:text-white md:text-6xl lg:text-7xl"
           />
           <InitialReveal delay={0.3} y={26} blur={5} duration={0.62}>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/[0.72] md:text-xl">
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#4b5563] dark:text-white/[0.72] md:text-xl">
               {t('hero.subtitle')}
             </p>
           </InitialReveal>
@@ -60,7 +60,7 @@ export function HeroSection() {
             <Link
               href="/login"
               locale="es"
-              className="inline-flex min-h-12 items-center justify-center rounded-md border border-white/20 px-5 text-base font-semibold text-white transition-colors duration-fast ease-standard hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="inline-flex min-h-12 items-center justify-center rounded-md border border-[#10131a]/20 px-5 text-base font-semibold text-[#10131a] transition-colors duration-fast ease-standard hover:bg-[#10131a]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/20 dark:text-white dark:hover:bg-white/10 dark:focus-visible:ring-white"
             >
               {t('actions.login')}
             </Link>
@@ -80,8 +80,10 @@ export function HeroSection() {
                   blur={4}
                   duration={0.52}
                 >
-                  <dt className="text-sm text-white/60">{t(`hero.stats.${key}.label`)}</dt>
-                  <dd className="mt-1 text-2xl font-black text-white">
+                  <dt className="text-sm text-[#6b7280] dark:text-white/60">
+                    {t(`hero.stats.${key}.label`)}
+                  </dt>
+                  <dd className="mt-1 text-2xl font-black text-[#10131a] dark:text-white">
                     {t(`hero.stats.${key}.value`)}
                   </dd>
                 </StaggerItem>
