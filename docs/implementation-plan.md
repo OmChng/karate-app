@@ -35,7 +35,7 @@ Cursor can execute it in a single session.
 - ✅ Migrations script (`scripts/migrate.ts`) and seed script
   (`scripts/seed.ts`).
 - ✅ Auth.js v5 with Credentials provider (email-or-phone), Argon2id
-  hashing, DB sessions.
+  hashing, JWT sessions, DB-backed RBAC, and login throttling.
 - ✅ RBAC helpers (`requireRole`, `withOrg`).
 - ✅ Application shell: top bar, sidebar, breadcrumb, theme provider,
   404 + error boundaries.

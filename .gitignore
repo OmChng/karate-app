@@ -9,11 +9,7 @@ dist/
 build/
 
 # Env files (never commit secrets)
-.env
-.env.local
-.env.*.local
-.env.development
-.env.production
+.env*
 # Allow the template only
 !.env.example
 
@@ -27,6 +23,9 @@ playwright/.cache/
 research/discovery/raw/
 research/discovery/har/
 research/discovery/screenshots/
+
+# Local uploads / file storage
+.uploads/
 
 # OS / editor
 .DS_Store
@@ -50,6 +49,31 @@ next-env.d.ts
 # Docker
 docker-data/
 postgres-data/
+
+# Local platform/build metadata
+.vercel/
+.netlify/
+
+# Local databases and dumps
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+*.backup
+
+# Private key/cert material
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Archives / recordings
+*.zip
+*.tar
+*.tgz
+*.mp4
+*.webm
 
 # Misc
 .cache/

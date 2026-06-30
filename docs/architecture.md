@@ -21,7 +21,7 @@
 | API style          | **RSC + server actions + thin route handlers**                                        | One mental model; route handlers only for webhooks/exports                           |
 | Database           | **PostgreSQL 16**                                                                     | Relational domain (see §4)                                                           |
 | ORM                | **Drizzle ORM**                                                                       | TS-native, no shadow DB, fast cold starts; Prisma is a fallback                      |
-| Auth               | **Auth.js v5** + Drizzle adapter, Credentials provider, Argon2id hashing, DB sessions | Self-hostable, no vendor lock                                                        |
+| Auth               | **Auth.js v5**, Credentials provider, Argon2id hashing, JWT sessions + DB-backed RBAC | Self-hostable, no vendor lock                                                        |
 | File storage       | Abstract `Storage` adapter (local FS in dev, S3-compatible in prod)                   | Cheap dev, swappable in prod                                                         |
 | Email              | nodemailer + SMTP. Mailhog in dev                                                     | Provider-agnostic                                                                    |
 | Background jobs    | **pg-boss** (Postgres-backed)                                                         | No Redis needed for v1; one less service to operate                                  |
@@ -40,7 +40,7 @@ flowchart LR
   Services -->|SMTP| Mail["Mailhog (dev) / SMTP provider (prod)"]
   Services -->|S3 API| Storage["Local FS (dev) / S3 (prod)"]
   Services -->|pg-boss| Jobs["Background jobs (Postgres queue)"]
-  Edge -->|Auth.js v5| AuthDB[("auth tables in Postgres")]
+  Edge -->|Auth.js v5 callbacks| AuthDB[("users, roles, login attempts in Postgres")]
   Services -->|pino JSON| Logs["stdout (CI/CD-friendly)"]
 ```
 
@@ -122,15 +122,19 @@ mechanical refactor — schemas are colocated under `src/db/schema/`.
   - Email: trimmed, lowercased.
   - Phone: parsed with `libphonenumber-js` to E.164, default region MX.
 - Passwords hashed with **Argon2id** (`argon2` package).
-- **Database sessions** in Postgres (not JWT) — lets us revoke sessions
-  on password change / forced logout.
+- **JWT sessions** via Auth.js. The session callback rehydrates the user
+  and role assignments from Postgres on each session read, which keeps
+  RBAC changes fresh. Forced session revocation remains a v1.1 hardening
+  item unless the app moves to database sessions.
 - Cookie: `__Secure-` prefix in prod, `SameSite=Lax`, `HttpOnly`.
 
 ### Password policy
 
 - Min 10 chars, no max, breach-checked against a local blocklist for v1
   (HIBP API in v1.1).
-- Rate-limited login (IP + identifier) via a `login_attempt` table.
+- Rate-limited login (IP + identifier) via a `login_attempt` table. The
+  table stores HMAC hashes of the normalized identifier and client IP,
+  not the raw values.
 
 ### Authorization
 
@@ -212,7 +216,9 @@ interface Storage {
   transaction.
 - Outbound HTTP is on an explicit allowlist.
 - Cookies are `HttpOnly`, `SameSite=Lax`, `Secure` in prod.
-- CSP header is set per route in `next.config.ts`.
+- Baseline security headers are set in `next.config.ts`
+  (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and
+  `Permissions-Policy`). CSP is planned but not enabled yet.
 - `.env.local` is gitignored; production secrets come from the host
   (Vercel env vars / Docker secrets / SOPS).
 
@@ -220,7 +226,9 @@ interface Storage {
 
 - `pino` JSON logs to stdout. Each request gets a `requestId` correlated
   to server-action calls.
-- Health endpoint at `/api/health` returns DB ping + version.
+- Health endpoint at `/api/health` returns status, DB availability, and
+  timestamp. DB failure details are written to server logs, not returned
+  in the public JSON response.
 - OTLP exporter scaffold ready (off by default) so the operator can
   point at Honeycomb / Tempo / Datadog later.
 - Audit log table is queryable by org admin via Reports → Audit.

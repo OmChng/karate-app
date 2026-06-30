@@ -2,6 +2,8 @@
 
 ## Metadata
 
+- **Scope:** local development audit only. Any credentials below are
+  seeded demo accounts from `pnpm db:seed`, not production accounts.
 - **Date / time:** 2026-06-17, 14:50–15:20 UTC-6.
 - **App:** Sensei Modern, located at `~/dev/freelance/karate`.
 - **Stack at time of audit:** Next.js 15.5.19 (App Router), TypeScript
@@ -43,8 +45,8 @@ CSRF=$(curl -sS -c /tmp/c.jar http://localhost:3000/api/auth/csrf | python3 -c '
 curl -sS -b /tmp/c.jar -c /tmp/c.jar -i -X POST \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   --data-urlencode "csrfToken=$CSRF" \
-  --data-urlencode 'identifier=admin@sensei.local' \
-  --data-urlencode 'password=admin1234' \
+  --data-urlencode 'identifier=superadmin@sensei.local' \
+  --data-urlencode 'password=superadmin1234' \
   --data-urlencode 'callbackUrl=http://localhost:3000/' \
   --data-urlencode 'json=true' \
   http://localhost:3000/api/auth/callback/credentials
@@ -206,7 +208,7 @@ via `reuseExistingServer: true`.
 1. Hard-refresh the open browser tab on `http://localhost:3000` to
    evict any cached client bundle (the dev server has been
    hot-reloading layouts but a hard refresh is safer).
-2. Log in with `admin@sensei.local` / `admin1234`.
+2. Log in with `superadmin@sensei.local` / `superadmin1234`.
 3. Confirm the dashboard renders (title bar shows "Tablero · Sensei
    Modern") and the sidebar / bottom nav are visible.
 4. Navigate to "Miembros" — list and detail should render normally.

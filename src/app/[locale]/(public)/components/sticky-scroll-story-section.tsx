@@ -63,7 +63,7 @@ export function StickyScrollStorySection() {
       </div>
 
       <div className="container relative hidden lg:sticky lg:top-[76px] lg:block lg:min-h-[calc(100vh-76px)] motion-reduce:lg:static motion-reduce:lg:min-h-0">
-        <div className="grid min-h-[calc(100vh-76px)] items-center gap-12 py-16 lg:grid-cols-[0.88fr_1fr] motion-reduce:min-h-0 motion-reduce:py-0">
+        <div className="grid min-h-[calc(100vh-76px)] items-center gap-12 py-16 motion-reduce:min-h-0 motion-reduce:py-0 lg:grid-cols-[0.88fr_1fr]">
           <motion.div
             data-public-motion="story-heading"
             style={{
@@ -85,7 +85,7 @@ export function StickyScrollStorySection() {
           </motion.div>
 
           <div className="relative">
-            <div className="absolute bottom-8 left-7 top-8 w-px bg-white/12" aria-hidden>
+            <div className="bg-white/12 absolute bottom-8 left-7 top-8 w-px" aria-hidden>
               <motion.div
                 className="h-full w-px origin-top bg-primary"
                 style={{ scaleY: shouldReduceMotion ? 1 : progressScale }}
@@ -135,18 +135,13 @@ function ScrollStoryBeat({
   body: string;
   reducedMotion: boolean;
 }) {
-  const opacity = useTransform(
+  const opacity = useTransform(progress, [enterStart, enterEnd, exitStart, exitEnd], [0, 1, 1, 0]);
+  const y = useTransform(progress, [enterStart, enterEnd, exitStart, exitEnd], [42, 0, 0, -28]);
+  const scale = useTransform(
     progress,
     [enterStart, enterEnd, exitStart, exitEnd],
-    [0, 1, 1, 0],
+    [0.965, 1, 1, 0.985],
   );
-  const y = useTransform(progress, [enterStart, enterEnd, exitStart, exitEnd], [42, 0, 0, -28]);
-  const scale = useTransform(progress, [enterStart, enterEnd, exitStart, exitEnd], [
-    0.965,
-    1,
-    1,
-    0.985,
-  ]);
   const filter = useTransform(
     progress,
     [enterStart, enterEnd, exitStart, exitEnd],

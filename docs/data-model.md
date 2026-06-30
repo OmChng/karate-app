@@ -128,18 +128,35 @@ Index: `(user_id, organization_id)`. Unique `(user_id, organization_id, dojo_id,
 
 Auth.js-compatible session table.
 
+Current runtime auth uses Auth.js JWT sessions, so this table is
+adapter-compatible scaffolding rather than the active session store. RBAC
+roles are still loaded from Postgres during the session callback.
+
 | Column        | Type                 | Notes |
 | ------------- | -------------------- | ----- |
-| id            | uuid PK              |       |
+| session_token | text PK              |       |
 | user_id       | uuid FK user         |       |
-| session_token | text UNIQUE          |       |
 | expires       | timestamptz NOT NULL |       |
-| ip            | inet                 |       |
-| user_agent    | text                 |       |
 
 ### `account`, `verification_token`, `auth_factor`
 
 Auth.js + MFA scaffolding. Schemas follow the official Drizzle adapter.
+
+### `login_attempt`
+
+DB-backed throttle for credentials login attempts.
+
+| Column          | Type        | Notes                                        |
+| --------------- | ----------- | -------------------------------------------- |
+| id              | uuid PK     |                                              |
+| identifier_hash | text        | HMAC of normalized email/phone               |
+| ip_hash         | text        | HMAC of the detected client IP               |
+| success         | boolean     | failed attempts count toward the throttle    |
+| reason          | text NULL   | `invalid_credentials` or `rate_limited`      |
+| created_at      | timestamptz | attempts older than the retention are pruned |
+
+Indexes: `(identifier_hash, created_at)`, `(ip_hash, created_at)`,
+`created_at`.
 
 ### `member`
 
@@ -352,19 +369,23 @@ Beyond per-table indexes called out above:
 
 ## 6. Seed strategy
 
-`scripts/seed.ts` populates:
+`scripts/seed.ts` populates local demo data and refuses to run when
+`NODE_ENV=production`:
 
 - 1 organization (`Organización Gojukan` demo).
-- 1 dojo.
-- 1 admin user (`admin@sensei.local`, password `admin1234`, gated by
-  `NODE_ENV !== 'production'`).
-- 1 instructor user.
-- 2 members.
-- 8 rank definitions (white → black, simplified Goju-Ryu).
-- 1 class for tomorrow.
-- A couple of sample attendance + payment rows.
+- 4 real public academies from the official website: Bosques de Santa
+  Anita, Bugambilias, Las Águilas, and San Agustín.
+- 1 super admin (`superadmin@sensei.local`, password
+  `superadmin1234`) that can see the whole organization.
+- 1 dojo admin and 1 instructor account per seeded academy.
+- Legacy `CTR-*` demo students assigned to Bosques de Santa Anita, plus
+  academy-specific demo students for the other seeded academies.
+- 12 Gojukan rank definitions.
+- 4 recurring class groups per seeded academy.
+- Sample attendance and payment rows per seeded academy.
 
-Seed is idempotent (uses `ON CONFLICT DO NOTHING`).
+Seed is idempotent: it updates existing local demo rows and inserts
+missing rows without duplicating them.
 
 ## 7. Data import from the legacy app
 

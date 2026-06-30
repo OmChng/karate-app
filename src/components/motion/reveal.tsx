@@ -1,13 +1,7 @@
 'use client';
 
 import { Children, type ReactNode, useMemo, useRef } from 'react';
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-  type Variants,
-} from 'motion/react';
+import { motion, useReducedMotion, useScroll, useTransform, type Variants } from 'motion/react';
 
 const PREMIUM_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
@@ -39,12 +33,10 @@ export function Reveal({
   amount = 0.28,
 }: RevealProps) {
   const shouldReduceMotion = useReducedMotion();
-  const variants = useMemo(() => revealVariants({ delay, duration, y, blur }), [
-    blur,
-    delay,
-    duration,
-    y,
-  ]);
+  const variants = useMemo(
+    () => revealVariants({ delay, duration, y, blur }),
+    [blur, delay, duration, y],
+  );
 
   return (
     <motion.div
@@ -69,12 +61,10 @@ export function InitialReveal({
   blur = 6,
 }: Omit<RevealProps, 'once' | 'amount'>) {
   const shouldReduceMotion = useReducedMotion();
-  const variants = useMemo(() => revealVariants({ delay, duration, y, blur }), [
-    blur,
-    delay,
-    duration,
-    y,
-  ]);
+  const variants = useMemo(
+    () => revealVariants({ delay, duration, y, blur }),
+    [blur, delay, duration, y],
+  );
 
   return (
     <motion.div
@@ -157,12 +147,10 @@ export function StaggerItem({
   hover = 'none',
 }: StaggerItemProps) {
   const shouldReduceMotion = useReducedMotion();
-  const variants = useMemo(() => cardRevealVariants({ y, scale, blur, duration }), [
-    blur,
-    duration,
-    scale,
-    y,
-  ]);
+  const variants = useMemo(
+    () => cardRevealVariants({ y, scale, blur, duration }),
+    [blur, duration, scale, y],
+  );
 
   return (
     <motion.div

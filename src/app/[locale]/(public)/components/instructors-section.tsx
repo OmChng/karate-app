@@ -1,10 +1,6 @@
 import { Medal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import {
-  AnimatedSectionHeading,
-  StaggerContainer,
-  StaggerItem,
-} from '@/components/motion/reveal';
+import { AnimatedSectionHeading, StaggerContainer, StaggerItem } from '@/components/motion/reveal';
 
 // Static public placeholder content until instructor profiles are exposed publicly.
 const INSTRUCTORS = ['chief', 'formation', 'operations'] as const;

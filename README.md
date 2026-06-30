@@ -46,10 +46,15 @@ pnpm db:seed
 pnpm dev             # http://localhost:3000
 ```
 
-Demo logins (created by `pnpm db:seed`):
+Local demo logins (created by `pnpm db:seed`; the seed script refuses
+to run in production):
 
-- `admin@sensei.local` / `admin1234` — organization admin
-- `sensei@sensei.local` / `sensei1234` — instructor
+- `superadmin@sensei.local` / `superadmin1234` — super admin
+- `admin.bosques-santa-anita@sensei.local` / `admin1234` — Bosques de Santa Anita admin
+- `sensei.bosques-santa-anita@sensei.local` / `sensei1234` — Bosques de Santa Anita instructor
+
+Each seeded academy also gets matching `admin.<academy>@sensei.local`
+and `sensei.<academy>@sensei.local` local accounts.
 
 ## Quick start (Windows / PowerShell)
 
@@ -226,7 +231,7 @@ pnpm db:up && pnpm db:migrate
 - Next.js 15 App Router (RSC) + TypeScript strict + Tailwind + shadcn
   groundwork.
 - Auth.js v5 with Credentials (email or phone), Argon2id hashing,
-  database sessions.
+  JWT sessions, DB-backed RBAC, and login throttling.
 - RBAC helpers with role inheritance and org/dojo scope.
 - Drizzle schema for all v1 entities + migration + idempotent seed.
 - i18n with `next-intl`, **Spanish-only customer UI** (the audience is

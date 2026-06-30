@@ -1,4 +1,13 @@
-import { integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 /**
@@ -41,4 +50,21 @@ export const verificationTokens = pgTable(
     expires: timestamp('expires', { withTimezone: true, mode: 'date' }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.identifier, t.token] })],
+);
+
+export const loginAttempts = pgTable(
+  'login_attempt',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    identifierHash: text('identifier_hash').notNull(),
+    ipHash: text('ip_hash').notNull(),
+    success: boolean('success').notNull().default(false),
+    reason: text('reason'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('login_attempt_identifier_created_idx').on(t.identifierHash, t.createdAt),
+    index('login_attempt_ip_created_idx').on(t.ipHash, t.createdAt),
+    index('login_attempt_created_idx').on(t.createdAt),
+  ],
 );

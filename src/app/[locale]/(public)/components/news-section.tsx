@@ -1,10 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import {
-  AnimatedSectionHeading,
-  StaggerContainer,
-  StaggerItem,
-} from '@/components/motion/reveal';
+import { AnimatedSectionHeading, StaggerContainer, StaggerItem } from '@/components/motion/reveal';
 
 // Static public placeholder content until the News module exists.
 const NEWS_ITEMS = ['grading', 'seminar', 'community'] as const;

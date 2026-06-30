@@ -5,6 +5,11 @@ import { z } from 'zod';
 import { and, eq, or, sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { users, userRoles } from '@/db/schema';
+import {
+  checkLoginRateLimit,
+  recordLoginFailure,
+  recordLoginSuccess,
+} from '@/lib/login-rate-limit';
 import { isEmailLike, normalizeEmail, normalizePhone } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import type { UserRole } from '@/db/schema/enums';
@@ -45,27 +50,46 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         identifier: { label: 'Email o teléfono', type: 'text' },
         password: { label: 'Contraseña', type: 'password' },
       },
-      authorize: async (raw) => {
+      authorize: async (raw, request) => {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         const { identifier, password } = parsed.data;
 
         const isEmail = isEmailLike(identifier);
         const normalized = isEmail ? normalizeEmail(identifier) : normalizePhone(identifier);
+        const rateLimit = await checkLoginRateLimit(normalized, request.headers);
+
+        if (rateLimit.limited) {
+          await recordLoginFailure(rateLimit.subject, 'rate_limited');
+          logger.warn(
+            {
+              identifierFailures: rateLimit.identifierFailures,
+              ipFailures: rateLimit.ipFailures,
+              retryAfterSeconds: rateLimit.retryAfterSeconds,
+            },
+            'login: rate limited',
+          );
+          return null;
+        }
 
         const [user] = await db
           .select()
           .from(users)
           .where(isEmail ? eq(users.email, normalized) : eq(users.phone, normalized))
           .limit(1);
-        if (!user || !user.passwordHash) return null;
+        if (!user || !user.passwordHash) {
+          await recordLoginFailure(rateLimit.subject, 'invalid_credentials');
+          return null;
+        }
 
         const ok = await argon2.verify(user.passwordHash, password).catch(() => false);
         if (!ok) {
+          await recordLoginFailure(rateLimit.subject, 'invalid_credentials');
           logger.info({ userId: user.id }, 'login: bad password');
           return null;
         }
 
+        await recordLoginSuccess(rateLimit.subject);
         await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
         logger.info({ userId: user.id }, 'login: success');
 
